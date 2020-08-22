@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 35.16" width="100mm" style="font-size:5.6px;font-family:sans-serif">
+	<defs>
+		<marker id="m1">
+			<path transform="matrix(-0.4,0,0,-0.4,-2,0)" style="stroke-width:1pt" d="M 0,0 5,-5 -12.5,0 5,5 Z"/>
+		</marker>
+	</defs>
+	<g style="fill:none;stroke:#000000;stroke-width:0.26px;marker-end:url(#m1)">
+		<path d="m 38.83,14 5.32,-7.48 c 2.52,-3.55 3.86,-2.84 9.96,-2.84"/>
+		<path d="m 40.16,15.34 4.23,-1.53 c 1.93,-0.7 4.66,-0.93 9.67,-0.93"/>
+		<path d="m 38.83,21.17 5.32,7.48 c 2.52,3.55 3.86,2.84 9.96,2.84"/>
+		<path d="m 40.2,19.82 4.23,1.53 c 1.93,0.7 4.66,0.93 9.67,0.93"/>
+	</g>
+	<g style="fill:none;stroke:#999999;stroke-width:0.5">
+		<rect width="43.43" height="7.17" x="56.32" y="0.25" ry="2.65" />
+		<rect width="43.43" height="7.17" x="56.32" y="9.41" ry="2.65" />
+		<rect width="43.43" height="7.17" x="56.32" y="18.66" ry="2.65" />
+		<rect width="43.43" height="7.17" x="56.32" y="27.74" ry="2.65" />
+		<rect width="38.58" height="7.17" x="0.25" y="14" ry="2.65" />
+	</g>
+	<text style="fill:#17a2b8;stroke:none"><tspan x="1.5" y="19.73" style="fill:#17a2b8;stroke-width:0.26">&quot;Three ones&quot;</tspan></text>
+	<text style="fill:#000000;stroke:none"><tspan x="59.5" y="15.06">&quot;<tspan style="fill:#ff0000">Seven</tspan> twos&quot;</tspan></text>
+	<text style="fill:#007bff"><tspan style="fill:#007bff" y="33.44" x="67">&quot;Dudo&quot;</tspan></text>
+	<text style="fill:#17a2b8"><tspan style="fill:#17a2b8" y="5.89" x="62.11">&quot;Four ones&quot;</tspan></text>
+	<text style="fill:#000000"><tspan y="24.38" x="57">&quot;<tspan style="fill:#ff0000">Seven</tspan> threes&quot;</tspan></text>
+</svg>

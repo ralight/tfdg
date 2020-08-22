@@ -1,0 +1,79 @@
+td {
+	padding: 0.2rem !important;
+}
+
+.dice {
+	width: 22px;
+	height: 22px;
+}
+
+.diceU {
+    background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent' stroke='black'/><path d='m 10.580123,12.835735 -0.01527,-0.366393 c -0.03053,-0.686989 0.122131,-0.99995 0.259529,-1.221313 0.251896,-0.419826 0.702255,-0.832019 1.152614,-1.2518453 0.801486,-0.7404207 1.442675,-1.4503086 1.442675,-2.6105555 0,-1.8167024 -1.679305,-2.7479531 -3.350976,-2.7479531 -1.4121427,0 -2.2975943,0.4656254 -2.8319185,1.1068144 -0.450359,0.5343242 -0.6564555,1.2289457 -0.6564555,1.915934 0,0.1908301 0.2747953,0.3511274 0.6182895,0.3511274 0.3434941,0 0.6182894,-0.1602973 0.6182894,-0.3511274 0,-0.5801234 0.1679305,-1.1755133 0.5419574,-1.6258723 0.4274594,-0.5190578 1.0533821,-0.7022546 1.7098377,-0.7022546 1.183146,0 2.12203,0.8701851 2.114397,2.0533316 0,1.0075828 -0.57249,1.6106059 -1.267112,2.2517949 -0.488525,0.4579919 -0.992316,0.9388839 -1.2518449,1.3587099 -0.1755637,0.282429 -0.374027,0.656456 -0.3434942,1.480842 l 0.015266,0.374027 c 0.00763,0.183197 0.2824286,0.335861 0.6182895,0.335861 0.1984632,0 0.6411892,-0.08397 0.6259222,-0.351128 z m -0.6335554,0.885452 c -0.450359,0 -0.8167527,0.366394 -0.8167527,0.824386 0,0.450359 0.3663937,0.816753 0.8167527,0.816753 0.4503594,0 0.8167524,-0.366394 0.8167524,-0.816753 0,-0.457992 -0.366393,-0.824386 -0.8167524,-0.824386 z' /></svg>") no-repeat center / contain;
+}
+
+.dice1 {
+    background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='10' cx='10'/></svg>") no-repeat center / contain;}
+
+.dice2 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='15.5' cx='4.5'/><circle r='1.7' cy='4.5' cx='15.5'/></svg>") no-repeat center / contain;
+}
+
+.dice3 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='10' cx='10'/><circle r='1.7' cy='15.5' cx='15.5'/><circle r='1.7' cy='4.5' cx='4.5'/></svg>") no-repeat center / contain;
+}
+
+.dice4 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='15.5' cx='15.5'/><circle r='1.7' cy='15.5' cx='4.5'/><circle r='1.7' cy='4.5' cx='15.5'/><circle r='1.7' cy='4.5' cx='4.5'/></svg>") no-repeat center / contain;
+}
+
+.dice5 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='10' cx='10'/><circle r='1.7' cy='15.5' cx='15.5'/><circle r='1.7' cy='15.5' cx='4.5'/><circle r='1.7' cy='4.5' cx='15.5'/><circle r='1.7' cy='4.5' cx='4.5'/></svg>") no-repeat center / contain;
+}
+
+.dice6 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='10' cx='15.5'/><circle r='1.7' cy='10' cx='4.5'/><circle r='1.7' cy='15.5' cx='15.5'/><circle r='1.7' cy='15.5' cx='4.5'/><circle r='1.7' cy='4.5' cx='15.5'/><circle r='1.7' cy='4.5' cx='4.5'/></svg>") no-repeat center / contain;
+}
+
+.dice7 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='10' cx='10'/><circle r='1.7' cy='10' cx='15.5'/><circle r='1.7' cy='10' cx='4.5'/><circle r='1.7' cy='15.5' cx='15.5'/><circle r='1.7' cy='15.5' cx='4.5'/><circle r='1.7' cy='4.5' cx='15.5'/><circle r='1.7' cy='4.5' cx='4.5'/></svg>") no-repeat center / contain;
+}
+
+.dice8 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='15.5' cx='10'/><circle r='1.7' cy='4.5' cx='10'/><circle r='1.7' cy='10' cx='15.5'/><circle r='1.7' cy='10' cx='4.5'/><circle r='1.7' cy='15.5' cx='15.5'/><circle r='1.7' cy='15.5' cx='4.5'/><circle r='1.7' cy='4.5' cx='15.5'/><circle r='1.7' cy='4.5' cx='4.5'/></svg>") no-repeat center / contain;
+}
+
+.dice9 {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' style='stroke:black;fill:black'><rect ry='4.6' y='0.5' x='0.5' height='19' width='19' fill='transparent'/><circle r='1.7' cy='10' cx='10'/><circle r='1.7' cy='15.5' cx='10'/><circle r='1.7' cy='4.5' cx='10'/><circle r='1.7' cy='10' cx='4.5'/><circle r='1.7' cy='10' cx='15.5'/><circle r='1.7' cy='10' cx='4.5'/><circle r='1.7' cy='15.5' cx='15.5'/><circle r='1.7' cy='15.5' cx='4.5'/><circle r='1.7' cy='4.5' cx='15.5'/><circle r='1.7' cy='4.5' cx='4.5'/></svg>") no-repeat center / contain;
+}
+
+.star {
+	background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'><path fill='yellow' d='M -1.0633841e-5,7.7579584 H 7.6305705 L 9.9999998,0.50954327 12.382168,7.7579584 h 7.617842 l -6.165611,4.4968196 2.369429,7.235677 -6.2038282,-4.484081 -6.1910893,4.484081 2.3566904,-7.235677 z' /><path fill='orange' d='M -1.0633841e-5,7.7579584 H 7.6305705 L 9.9999998,0.50954327 12.382168,7.7579584 h 7.617842 l -6.165611,4.4968196 2.369429,7.235677 -6.2038282,-4.484081 -6.1910893,4.484081 2.3566904,-7.235677 z M 7.0318438,11.987262 5.2484025,17.51593 l 4.7515973,-3.414016 4.8917252,3.59236 -1.936308,-5.73249 5.082808,-3.5668822 h -6.19109 L 9.9999998,2.8025393 8.1910807,8.3949018 h -6.216567 z' /></svg>") no-repeat center / contain;
+}
+
+svg.bannerimg {
+	height: 65px;
+	width: 560px;
+	z-index: -1;
+	display: block;
+	margin: 0 auto;
+} 
+		  
+path {
+	stroke: black; 
+	stroke-width: 3px;
+	stroke-linecap: round;
+	fill: none;
+}   
+
+.tow-top {
+	stroke: black;
+	stroke-width: 2px;
+}
+.tow-bottom {
+	stroke: black;
+	stroke-width: 2px;
+}
+
+.flag-middle {
+	stroke: none;
+}
