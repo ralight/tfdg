@@ -122,19 +122,22 @@ function kickPlayer(){
 
 function enable_calza(enabled){
 	if($("#gametable div div.card-body").length < 3 || palifico_round == true || dice_count == options['max-dice']){
+		enabled = false;
+	}else{
+		if(options['allow-calza'] && enabled == true){
+			enabled = true;
+		}else{
+			enabled = false;
+		}
+	}
+	if(enabled){
+		$("#b-calza").prop("disabled", false);
+		$("#b-calza").removeClass("btn-outline-secondary");
+		$("#b-calza").addClass("btn-warning");
+	}else{
 		$("#b-calza").prop("disabled", true);
 		$("#b-calza").addClass("btn-outline-secondary");
 		$("#b-calza").removeClass("btn-warning");
-	}else{
-		if(options['allow-calza'] && enabled == true){
-			$("#b-calza").prop("disabled", false);
-			$("#b-calza").addClass("btn-warning");
-			$("#b-calza").removeClass("btn-outline-secondary");
-		}else{
-			$("#b-calza").prop("disabled", true);
-			$("#b-calza").addClass("btn-outline-secondary");
-			$("#b-calza").removeClass("btn-warning");
-		}
 	}
 }
 
@@ -371,7 +374,7 @@ function newRound(data){
 		$("#b-snd1").prop("disabled", false);
 		$("#b-snd2").prop("disabled", false);
 		enable_dudo(false);
-		enable_calza(true);
+		enable_calza(false);
 		enable_loser(false);
 		enable_roll(false);
 		$("#b-leave").prop("disabled", false);
@@ -571,7 +574,7 @@ function showMyDice(data){
 		$("#"+uuid+"-d"+(i+1)).removeClass(dice_styles);
 	}
 	dice_count = data.length;
-	enable_calza();
+	enable_calza(true);
 }
 
 
