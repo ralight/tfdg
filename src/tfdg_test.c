@@ -109,8 +109,10 @@ const char *mosquitto_client_id(const struct mosquitto *client)
 		return player1_name;
 	}else if(client == &client2){
 		return player2_name;
-	}else{
+	}else if(client == &client3){
 		return player3_name;
+	}else{
+		return "unknown";
 	}
 }
 
