@@ -2348,9 +2348,8 @@ static void tfdg_handle_winner(struct tfdg_room *room_s)
 	easy_publish(room_s, "winner", tree);
 	cJSON_Delete(tree);
 
-	easy_publish(room_s, "room-closing", NULL);
-
 	room_set_state(room_s, tgs_game_over);
+	easy_publish(room_s, "room-closing", NULL);
 }
 
 
