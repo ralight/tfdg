@@ -2539,11 +2539,12 @@ void tfdg_handle_i_lost(struct mosquitto *client, struct tfdg_room *room_s, cons
 			easy_publish_player(room_s, "game-loser", player_s);
 		}
 		room_set_starter(room_s, player_s);
-	}
-	room_set_palifico_round(room_s, false);
-	if(player_s->dice_count == 1 && room_s->current_count > 2 && player_s->ex_palifico == false){
-		player_set_ex_palifico(player_s);
-		room_set_palifico_round(room_s, true);
+
+		room_set_palifico_round(room_s, false);
+		if(player_s->dice_count == 1 && room_s->current_count > 2 && player_s->ex_palifico == false){
+			player_set_ex_palifico(player_s);
+			room_set_palifico_round(room_s, true);
+		}
 	}
 }
 
