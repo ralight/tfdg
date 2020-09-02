@@ -124,6 +124,7 @@ struct tfdg_room{
 	cJSON *json;
 	struct tfdg_room_options options;
 	int pre_roll_count;
+	int totals[20];
 };
 
 
@@ -140,6 +141,7 @@ static cJSON *json_create_dudo_candidates_object(struct tfdg_room *room_s);
 static cJSON *json_create_my_dice_array(struct tfdg_player *player_s);
 static void save_full_state(void);
 void room_append_player(struct tfdg_room *room_s, struct tfdg_player *player_s, bool onload);
+static cJSON *room_dice_totals(struct tfdg_room *room_s);
 void room_set_current_count(struct tfdg_room *room_s, int count);
 void room_set_host(struct tfdg_room *room_s, struct tfdg_player *host);
 static void report_results_to_losers(struct tfdg_room *room_s);
@@ -346,6 +348,9 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 
 	jtmp = cJSON_CreateNumber(now - room_s->start_time);
 	cJSON_AddItemToObject(game, "duration", jtmp);
+
+	jtmp = room_dice_totals(room_s);
+	cJSON_AddItemToObject(game, "dice-totals", jtmp);
 
 	cJSON_AddItemToArray(j_stats_games, game);
 
@@ -1597,6 +1602,7 @@ void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player
 		player_s->dice_values[i] = (bytes[i]%room_s->options.max_dice_value)+1;
 		jtmp = cJSON_CreateNumber(player_s->dice_values[i]);
 		cJSON_AddItemToArray(j_array, jtmp);
+		room_s->totals[player_s->dice_values[i]-1]++;
 	}
 	cJSON_ReplaceItemInObject(player_s->json, "dice", j_array);
 }
@@ -2315,9 +2321,33 @@ void tfdg_handle_call_calza(struct mosquitto *client, struct tfdg_room *room_s, 
 }
 
 
+static cJSON *room_dice_totals(struct tfdg_room *room_s)
+{
+	cJSON *array, *jtmp;
+	int i;
+
+	array = cJSON_CreateArray();
+	for(i=0; i<room_s->options.max_dice_value; i++){
+		jtmp = cJSON_CreateNumber(room_s->totals[i]);
+		cJSON_AddItemToArray(array, jtmp);
+	}
+	return array;
+}
+
+
 static void tfdg_handle_winner(struct tfdg_room *room_s)
 {
-	easy_publish_player(room_s, "winner", room_s->players);
+	cJSON *tree, *array, *j_player;
+
+	tree = cJSON_CreateObject();
+	array = room_dice_totals(room_s);
+	cJSON_AddItemToObject(tree, "totals", array);
+
+	j_player = player_to_cjson(room_s->players);
+	cJSON_AddItemToObject(tree, "winner", j_player);
+	easy_publish(room_s, "winner", tree);
+	cJSON_Delete(tree);
+
 	easy_publish(room_s, "room-closing", NULL);
 
 	room_set_state(room_s, tgs_game_over);
