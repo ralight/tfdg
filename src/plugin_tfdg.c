@@ -78,12 +78,13 @@ struct tfdg_player{
 	char *uuid;
 	char *name;
 	char *client_id;
+	cJSON *json;
 	int dice_count;
 	int dice_values[MAX_DICE];
+	int login_count;
 	enum tfdg_player_state state;
-	bool ex_palifico;
-	cJSON *json;
 	char pre_roll;
+	bool ex_palifico;
 };
 
 
@@ -1765,6 +1766,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 	if(room_s->host == NULL){
 		room_set_host(room_s, player_s);
 	}
+	player_s->login_count++;
 	tfdg_send_host(room_s);
 	free(name);
 	free(uuid);
@@ -1857,6 +1859,11 @@ void tfdg_handle_logout(struct mosquitto *client, struct tfdg_room *room_s, cons
 	if(player_s == NULL){
 		free(name);
 		free(uuid);
+		return;
+	}
+
+	player_s->login_count--;
+	if(player_s->login_count > 0){
 		return;
 	}
 
