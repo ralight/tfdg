@@ -6,13 +6,13 @@
 		<title>TFDG</title>
 		<link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
 		<link href="css/dice.css" rel="stylesheet" type="text/css">
-		<link rel="icon" href="img/favicon.png" sizes="16x16">
-		<link rel="icon" href="img/favicon-32.png" sizes="32x32">
+		<link rel="icon" href="img/favicon.png" sizes="16x16" id="icon16">
+		<link rel="icon" href="img/favicon-32.png" sizes="32x32" id="icon32">
 		<link rel="icon" href="img/favicon-152.png" sizes="152x152">
 		<link rel="icon" href="img/favicon-167.png" sizes="167x167">
 		<link rel="icon" href="img/favicon-180.png" sizes="180x180">
 		<link rel="icon" href="img/favicon-192.png" sizes="192x192">
-		<link rel="icon" href="img/favicon-196.png" sizes="196x196">
+		<link rel="icon" href="img/favicon-196.png" sizes="196x196" id="icon196">
 		<script src="js/jquery-3.5.1.min.js"></script>
 		<script src="js/bootstrap.bundle.min.js"></script>
 		<script src="js/paho-mqtt.js"></script>
@@ -640,6 +640,9 @@ function playerLost(data){
 		enable_dudo(false);
 		enable_calza(false);
 		enable_loser(false);
+		document.getElementById("icon16").href = "/img/dice-32-X.png";
+		document.getElementById("icon32").href = "/img/dice-32-X.png";
+		document.getElementById("icon196").href = "/img/dice-32-X.png";
 	}
 	removePlayerCard(data['uuid']);
 	console.log(data['name'] + " has lost");
@@ -919,6 +922,15 @@ function startMQTT(){
 					play_sound("roll"+data.length);
 				}else{
 					play_sound("roll5");
+				}
+				if(data.length < 10){
+					document.getElementById("icon16").href = "/img/dice-32-"+data.length+".png";
+					document.getElementById("icon32").href = "/img/dice-32-"+data.length+".png";
+					document.getElementById("icon196").href = "/img/dice-32-"+data.length+".png";
+				}else{
+					document.getElementById("icon16").href = "/img/dice-32-9.png";
+					document.getElementById("icon32").href = "/img/dice-32-9.png";
+					document.getElementById("icon196").href = "/img/dice-32-9.png";
 				}
 			}
 			enable_roll(false);
