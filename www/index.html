@@ -47,7 +47,6 @@ var options = {
 	"max-dice-value": 6,
 	"roll-dice-at-start": true,
 	"sounds-enabled": true,
-	"results-timeout": 4,
 	"results-timeout-value": 1000
 };
 var preRollRound = 1;
@@ -848,12 +847,6 @@ function handleSetOption(data){
 		}
 		$("#summary-results-table").append(tab);
 	}
-	if("results-timeout" in data){
-		options['results-timeout'] = parseInt(data['results-timeout']);
-		options['results-timeout-value'] = timeout_times[options['results-timeout']];
-		$("#l-results-timeout-range").text(options['results-timeout-value']/1000 + " seconds");
-		$("#results-timeout-range").val(options['results-timeout']);
-	}
 }
 
 function startMQTT(){
@@ -1063,13 +1056,6 @@ function setBoolOption(option, val){
 	mqtt.publish(topic_prefix+"set-option", JSON.stringify(data));
 }
 
-function resultsTimeoutRangeChange(val){
-	console.log(val);
-	$("#l-results-timeout-range").text(timeout_times[val]/1000 + " seconds");
-	let data = {"name":myname, "uuid":myuuid, "option":"results-timeout", "value":parseInt(val)};
-	mqtt.publish(topic_prefix+"set-option", JSON.stringify(data));
-}
-
 function maxDiceValueRangeChange(val){
 	$("#l-max-dice-value-range").text(val);
 	let data = {"name":myname, "uuid":myuuid, "option":"max-dice-value", "value":parseInt(val)};
@@ -1111,6 +1097,12 @@ $(document).ready(function(){
 	if(room_uuid.substr(0, 8) == "fafffaff"){
 		$("#b-snd1").removeClass("d-none");
 		$("#b-snd2").removeClass("d-none");
+	}
+
+	if(uP.get("fast") == "1"){
+		options['results-timeout-value'] = 0;
+	}else{
+		options['results-timeout-value'] = 1000;
 	}
 
 	$("#nameinput").keypress(function(e){
@@ -1264,11 +1256,6 @@ $(window).on("load", function(){
 									Maximum dice value:
 									<label for="max-dice-value-range" id="l-max-dice-value-range">6</label>
 									<input type="range" class="form-control-range" id="max-dice-value-range" value="6" min="3" max="9" oninput="maxDiceValueRangeChange(this.value);"/>
-								</div>
-								<div class="form-group text-left mt-1">
-									Results display time:
-									<label for="results-timeout-range" id="l-results-timeout-range">1</label>
-									<input type="range" class="form-control-range" id="results-timeout-range" value="4" min="0" max="6" oninput="resultsTimeoutRangeChange(this.value);"/>
 								</div>
 								</fieldset>
 							</div>

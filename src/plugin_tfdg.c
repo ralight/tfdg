@@ -90,7 +90,6 @@ struct tfdg_player{
 struct tfdg_room_options{
 	int max_dice;
 	int max_dice_value;
-	int results_timeout;
 	bool allow_calza;
 	bool roll_dice_at_start;
 	bool losers_see_dice;
@@ -605,9 +604,6 @@ static cJSON *json_create_options_obj(struct tfdg_room *room_s)
 
 	jtmp = cJSON_CreateBool(room_s->options.show_results_table);
 	cJSON_AddItemToObject(j_options, "show-results-table", jtmp);
-
-	jtmp = cJSON_CreateNumber(room_s->options.results_timeout);
-	cJSON_AddItemToObject(j_options, "results-timeout", jtmp);
 
 	return j_options;
 }
@@ -1548,7 +1544,6 @@ static struct tfdg_room *room_create(const char *room)
 
 	room_set_option_int(room_s, &room_s->options.max_dice, "max-dice", 5);
 	room_set_option_int(room_s, &room_s->options.max_dice_value, "max-dice-value", 6);
-	room_set_option_int(room_s, &room_s->options.results_timeout, "results-timeout", 4);
 	room_set_option_bool(room_s, &room_s->options.allow_calza, "allow-calza", true);
 	room_set_option_bool(room_s, &room_s->options.roll_dice_at_start, "roll-dice-at-start", true);
 	room_set_option_bool(room_s, &room_s->options.losers_see_dice, "losers-see-dice", true);
@@ -2642,20 +2637,6 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 							"max-dice", ival);
 
 					publish_int_option(room_s, "max-dice", ival);
-				}
-			}
-		}else if(strcmp(j_option->valuestring, "results-timeout") == 0){
-			if(cJSON_IsNumber(j_value)){
-				ival = j_value->valueint;
-				if(ival >= 0 && ival <= 3000){
-					room_set_option_int(room_s, &room_s->options.results_timeout, "results-timeout", ival);
-
-					printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
-							ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
-							room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
-							"results-timeout", ival);
-
-					publish_int_option(room_s, "results-timeout", ival);
 				}
 			}
 		}else if(strcmp(j_option->valuestring, "max-dice-value") == 0){
