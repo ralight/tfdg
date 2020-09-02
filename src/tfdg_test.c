@@ -95,7 +95,7 @@ void check_expected_publish(const char *topic, int payloadlen, const char *paylo
 	if(ep->random == false){
 		CU_ASSERT_NSTRING_EQUAL(payload, ep->payload, payloadlen);
 		if(strncmp(payload, ep->payload, payloadlen)){
-			printf("%s || %s\n", payload, ep->payload);
+			printf("%s\n%s\n", payload, ep->payload);
 		}
 	}
 	free(ep->payload);
@@ -253,7 +253,7 @@ void TEST_topic_tokenise(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 
 	add_expected_publish("host", player1_payload, false);
@@ -310,13 +310,13 @@ void TEST_single_login_login_logout_logout(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 
@@ -338,7 +338,7 @@ void TEST_single_login_logout(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 
@@ -356,7 +356,7 @@ void TEST_single_login_logout_logout(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 
@@ -375,7 +375,7 @@ void TEST_single_login_leave_game_logout(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 
@@ -396,7 +396,7 @@ void TEST_set_option_non_matching_player(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 
@@ -411,18 +411,60 @@ void TEST_set_option_non_matching_player(void)
 	mosquitto_auth_plugin_cleanup(NULL, NULL, 0);
 }
 
-
-void TEST_three_player_game(void)
+static void two_player_game(void)
 {
 	char payload[1000];
 	int i;
 
+	add_expected_publish("lobby-players",
+			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
+			false);
+
+	add_expected_publish("host", player1_payload, false);
+	easy_acl_check(room_uuid, &client1, "login", player1_payload, MOSQ_ACL_WRITE);
+	easy_acl_check(room_uuid, &client2, "login", player2_payload, MOSQ_ACL_WRITE);
+
+	snprintf(payload, sizeof(payload), "{\"name\":\"%s\", \"uuid\":\"%s\", \"option\":\"roll-dice-at-start\", \"value\":false}", player1_name, player1_uuid);
+	easy_acl_check(room_uuid, &client1, "set-option",     payload, MOSQ_ACL_WRITE);
+
+	easy_acl_check(room_uuid, &client1, "start-game", player1_payload, MOSQ_ACL_WRITE);
+
+	for(i=0; i<5; i++){
+		easy_acl_check(room_uuid, &client1, "roll-dice", player1_payload, MOSQ_ACL_WRITE);
+		easy_acl_check(room_uuid, &client2, "roll-dice", player2_payload, MOSQ_ACL_WRITE);
+
+		easy_acl_check(room_uuid, &client1, "call-dudo", player1_payload, MOSQ_ACL_WRITE);
+		easy_acl_check(room_uuid, &client1, "i-lost",    player1_payload, MOSQ_ACL_WRITE);
+		printf("EOR %i\n", i);
+	}
+
+
+	//easy_acl_check(room_uuid, &client1, "logout", player1_payload, MOSQ_ACL_WRITE);
+	//easy_acl_check(room_uuid, &client2, "logout", player2_payload, MOSQ_ACL_WRITE);
+	//easy_acl_check(room_uuid, &client3, "logout", player3_payload, MOSQ_ACL_WRITE);
+}
+
+
+void TEST_two_player_game(void)
+{
 	unlink("tfdg-state.json");
 	mosquitto_auth_plugin_init(NULL, NULL, 0);
 
+	two_player_game();
+
+	mosquitto_auth_plugin_cleanup(NULL, NULL, 0);
+}
+
+
+static void three_player_game(void)
+{
+	char payload[1000];
+	int i;
+
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 
 	add_expected_publish("host", player1_payload, false);
@@ -452,9 +494,33 @@ void TEST_three_player_game(void)
 		easy_acl_check(room_uuid, &client2, "i-lost",    player2_payload, MOSQ_ACL_WRITE);
 	}
 
-	easy_acl_check(room_uuid, &client1, "logout", player1_payload, MOSQ_ACL_WRITE);
-	easy_acl_check(room_uuid, &client2, "logout", player2_payload, MOSQ_ACL_WRITE);
-	easy_acl_check(room_uuid, &client3, "logout", player3_payload, MOSQ_ACL_WRITE);
+	//easy_acl_check(room_uuid, &client1, "logout", player1_payload, MOSQ_ACL_WRITE);
+	//easy_acl_check(room_uuid, &client2, "logout", player2_payload, MOSQ_ACL_WRITE);
+	//easy_acl_check(room_uuid, &client3, "logout", player3_payload, MOSQ_ACL_WRITE);
+}
+
+
+void TEST_three_player_game(void)
+{
+	unlink("tfdg-state.json");
+	mosquitto_auth_plugin_init(NULL, NULL, 0);
+
+	three_player_game();
+
+	mosquitto_auth_plugin_cleanup(NULL, NULL, 0);
+}
+
+
+void TEST_three_player_game_multiple(void)
+{
+	int i;
+
+	unlink("tfdg-state.json");
+	mosquitto_auth_plugin_init(NULL, NULL, 0);
+
+	for(i=0; i<2; i++){
+		three_player_game();
+	}
 
 	mosquitto_auth_plugin_cleanup(NULL, NULL, 0);
 }
@@ -657,7 +723,7 @@ void TEST_set_option_max_dice(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 	for(i=3; i<21; i++){
@@ -685,7 +751,7 @@ void TEST_set_option_max_dice_value(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 	add_expected_publish("host", player1_payload, false);
 	for(i=3; i<10; i++){
@@ -707,6 +773,104 @@ void TEST_sound_effects(void)
 {
 	char payload[1000];
 	int i;
+
+	add_expected_publish("lobby-players",
+			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
+			false);
+
+	add_expected_publish("host", player1_payload, false);
+
+	add_expected_publish("lobby-players",
+			"{\"players\":["
+			"{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"},"
+			"{\"name\":\"Player 2\",\"uuid\":\"00000000-0000-0000-0000-000000000002\"}"
+			"],"
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
+			false);
+
+	add_expected_publish("host", player1_payload, false);
+
+	add_expected_publish("lobby-players",
+			"{\"players\":["
+			"{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"},"
+			"{\"name\":\"Player 2\",\"uuid\":\"00000000-0000-0000-0000-000000000002\"},"
+			"{\"name\":\"Player 3\",\"uuid\":\"00000000-0000-0000-0000-000000000003\"}"
+			"],"
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
+			false);
+
+	add_expected_publish("host", player1_payload, false);
+
+	add_expected_publish("set-option", "{\"roll-dice-at-start\":false}", false);
+
+	add_expected_publish("lobby-players",
+			"{\"players\":["
+			"{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"},"
+			"{\"name\":\"Player 2\",\"uuid\":\"00000000-0000-0000-0000-000000000002\"},"
+			"{\"name\":\"Player 3\",\"uuid\":\"00000000-0000-0000-0000-000000000003\"}"
+			"],"
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
+			true);
+
+	for(i=0; i<5; i++){
+		add_expected_publish("new-round", "", true);
+		add_expected_publish("loser-results", "", true);
+		add_expected_publish("dice/00000000-0000-0000-0000-000000000001", "", true);
+		add_expected_publish("dice/00000000-0000-0000-0000-000000000002", "", true);
+		add_expected_publish("dice/00000000-0000-0000-0000-000000000003", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("dudo-candidates", "[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"},{\"name\":\"Player 3\",\"uuid\":\"00000000-0000-0000-0000-000000000003\"}]", true);
+		add_expected_publish("player-results", "", true);
+		add_expected_publish("summary-results", "", true);
+		add_expected_publish("round-loser", player1_payload, false);
+	}
+	
+	add_expected_publish("game-loser", player1_payload, false);
+	add_expected_publish("host", player1_payload, true);
+	add_expected_publish("player-lost", player1_payload, false);
+
+	for(i=0; i<4; i++){
+		add_expected_publish("new-round", "", true);
+		add_expected_publish("loser-results", "", true);
+		add_expected_publish("dice/00000000-0000-0000-0000-000000000002", "", true);
+		add_expected_publish("dice/00000000-0000-0000-0000-000000000003", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("dudo-candidates", "[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"},{\"name\":\"Player 3\",\"uuid\":\"00000000-0000-0000-0000-000000000003\"}]", true);
+		add_expected_publish("player-results", "", true);
+		add_expected_publish("summary-results", "", true);
+		add_expected_publish("round-loser", player2_payload, false);
+	}
+	{
+		add_expected_publish("new-round", "", true);
+		add_expected_publish("loser-results", "", true);
+		add_expected_publish("dice/00000000-0000-0000-0000-000000000002", "", true);
+		add_expected_publish("dice/00000000-0000-0000-0000-000000000003", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("snd-higher", "", true);
+		add_expected_publish("snd-exact", "", true);
+		add_expected_publish("dudo-candidates", "[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"},{\"name\":\"Player 3\",\"uuid\":\"00000000-0000-0000-0000-000000000003\"}]", true);
+		add_expected_publish("player-results", "", true);
+		add_expected_publish("summary-results", "", true);
+	}
+	add_expected_publish("player-lost", player2_payload, false);
+	add_expected_publish("winner", player3_payload, true);
+	add_expected_publish("room-closing", player3_payload, false);
+	//add_expected_publish("game-loser", player1_payload, false);
+
 
 	unlink("tfdg-state.json");
 	mosquitto_auth_plugin_init(NULL, NULL, 0);
@@ -768,7 +932,7 @@ void TEST_room_expiry(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 
 	add_expected_publish("host", player1_payload, false);
@@ -807,7 +971,7 @@ void TEST_room_expiry(void)
 
 	add_expected_publish("lobby-players",
 			"{\"players\":[{\"name\":\"Player 1\",\"uuid\":\"00000000-0000-0000-0000-000000000001\"}],"
-			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true,\"results-timeout\":4}}",
+			"\"options\":{\"losers-see-dice\":true,\"allow-calza\":true,\"max-dice\":5,\"max-dice-value\":6,\"show-results-table\":true}}",
 			false);
 
 	add_expected_publish("host", player1_payload, false);
@@ -878,6 +1042,15 @@ int main(int argc, char *argv[])
 {
 	CU_pSuite test_suite = NULL;
 
+	snprintf(player1_payload, sizeof(player1_payload), "{\"name\":\"%s\",\"uuid\":\"%s\"}", player1_name, player1_uuid);
+	snprintf(player2_payload, sizeof(player2_payload), "{\"name\":\"%s\",\"uuid\":\"%s\"}", player2_name, player2_uuid);
+	snprintf(player3_payload, sizeof(player3_payload), "{\"name\":\"%s\",\"uuid\":\"%s\"}", player3_name, player3_uuid);
+
+	memset(&client1, 0, sizeof(struct mosquitto));
+	memset(&client2, 0, sizeof(struct mosquitto));
+	memset(&client3, 0, sizeof(struct mosquitto));
+
+
     if(CU_initialize_registry() != CUE_SUCCESS){
         printf("Error initializing CUnit registry.\n");
         return 1;
@@ -901,31 +1074,24 @@ int main(int argc, char *argv[])
 			|| !CU_add_test(test_suite, "Single login logout logout", TEST_single_login_logout_logout)
 			|| !CU_add_test(test_suite, "Single login leave game logout", TEST_single_login_leave_game_logout)
 			|| !CU_add_test(test_suite, "Set option non-matching player", TEST_set_option_non_matching_player)
+			|| !CU_add_test(test_suite, "Two player game", TEST_two_player_game)
 			|| !CU_add_test(test_suite, "Three player game", TEST_three_player_game)
+			|| !CU_add_test(test_suite, "Three player game multiple", TEST_three_player_game_multiple)
 #endif
 #if 0
 			|| !CU_add_test(test_suite, "Three player game rejoin", TEST_three_player_game_rejoin)
 			|| !CU_add_test(test_suite, "Three player game undo loser", TEST_three_player_game_undo_loser)
 			|| !CU_add_test(test_suite, "Three player game with calza", TEST_three_player_game_with_calza)
-			|| !CU_add_test(test_suite, "Sound effects", TEST_sound_effects)
+			|| !CU_add_test(test_suite, "Room expiry", TEST_room_expiry)
 			|| !CU_add_test(test_suite, "Option: max dice", TEST_set_option_max_dice)
 			|| !CU_add_test(test_suite, "Option: max dice value", TEST_set_option_max_dice_value)
 #endif
-			|| !CU_add_test(test_suite, "Room expiry", TEST_room_expiry)
+			|| !CU_add_test(test_suite, "Sound effects", TEST_sound_effects)
 			){
 
 		printf("Error adding CUnit tests.\n");
 		return 1;
 	}
-
-	snprintf(player1_payload, sizeof(player1_payload), "{\"name\":\"%s\",\"uuid\":\"%s\"}", player1_name, player1_uuid);
-	snprintf(player2_payload, sizeof(player2_payload), "{\"name\":\"%s\",\"uuid\":\"%s\"}", player2_name, player2_uuid);
-	snprintf(player3_payload, sizeof(player3_payload), "{\"name\":\"%s\",\"uuid\":\"%s\"}", player3_name, player3_uuid);
-
-	memset(&client1, 0, sizeof(struct mosquitto));
-	memset(&client2, 0, sizeof(struct mosquitto));
-	memset(&client3, 0, sizeof(struct mosquitto));
-
 
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
