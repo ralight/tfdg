@@ -172,7 +172,7 @@ void easy_acl_check(const char *room, struct mosquitto *client, const char *topi
 	msg.payload = payload;
 	msg.payloadlen = strlen(payload);
 
-	rc = mosquitto_auth_acl_check(NULL, mode, &client1, &msg);
+	rc = mosquitto_auth_acl_check(NULL, mode, client, &msg);
 	CU_ASSERT_EQUAL(rc, MOSQ_ERR_ACL_DENIED);
 }
 
