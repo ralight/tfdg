@@ -179,8 +179,12 @@ function enable_roll(enabled){
 function enableStartGame()
 {
 	if(host == myuuid && $("#gametable div div.card-header").length >= 2){
+		$("#b-start").addClass("btn-success");
+		$("#b-start").removeClass("btn-outline-secondary");
 		$("#b-start").prop("disabled", false);
 	}else{
+		$("#b-start").removeClass("btn-success");
+		$("#b-start").addClass("btn-outline-secondary");
 		$("#b-start").prop("disabled", true);
 	}
 }
@@ -1286,7 +1290,7 @@ $(window).on("load", function(){
 						<button type="button" class="d-none btn btn-light m-1 text-white" disabled id="b-snd2" onclick="easy_publish('snd-exact');">S</button>
 					</div>
 					<div class="row justify-content-center" id="lobbyctrl1">
-						<button type="button" class="btn btn-success m-1" disabled id="b-start" onclick="$('#prefctrl').collapse('hide');easy_publish('start-game');">Start Game</button>
+						<button type="button" class="btn btn-outline-secondary m-1" disabled id="b-start" onclick="$('#prefctrl').collapse('hide');easy_publish('start-game');">Start Game</button>
 					</div>
 					<div class="row justify-content-center m-1 d-none" id="lobbyctrl2h">
 						<p>Use the cog menu to configure the game settings. Once everybody has arrived, start the game.</p>
