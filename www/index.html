@@ -470,13 +470,14 @@ function setCalza(data){
 }
 
 
-function showSummary()
+function showSummary(heading)
 {
 	if(summary_results == null) return;
 
 	for(i=0; i<summary_results['totals'].length; i++){
 		$("#tot"+(i+1)).text(summary_results['totals'][i]);
 	}
+	$("#results-header").text(heading);
 	summary_results = null;
 }
 
@@ -555,7 +556,7 @@ function showPlayerDice(){
 		}
 		setTimeout(showPlayerDice, options['results-timeout-value']);
 	}else{
-		showSummary();
+		showSummary("Dice");
 		setTimeout(allowLosers, options['results-timeout-value']);
 	}
 }
@@ -848,7 +849,7 @@ function handleSetOption(data){
 		$("#max-dice-value-range").val(options['max-dice-value']);
 
 		$("#summary-results-table").empty();
-		var tab = "<tr><td></td><td>Dice</td></tr>";
+		var tab = "<tr><th></th><th id=\"results-header\">Dice</th></tr>";
 		for(var i=0; i<options['max-dice-value']; i++){
 			tab += '<tr><td>'+number_plurals[i]+'<td id="tot'+(i+1)+'">?</td></tr>';
 		}
@@ -959,7 +960,7 @@ function startMQTT(){
 			playerLost(data);
 		}else if(cmd == "winner"){
 			summary_results = data;
-			showSummary();
+			showSummary("Total Dice");
 			setDiceStar();
 			if(data['winner']['name'].length < 10){
 				$("#banner").removeClass("d-none");
@@ -1337,7 +1338,7 @@ $(window).on("load", function(){
 
 		<div class="container table-responsive d-none" id="summary-results" style="max-width:376px">
 		<table id="summary-results-table" class="table table-sm">
-			<tr><th></th><th>Dice</th></tr>
+			<tr><th></th><th id="results-header">Dice</th></tr>
 			<tr><td>Ones</td>  <td id="tot1">?</td></tr>
 			<tr><td>Twos</td>  <td id="tot2">?</td></tr>
 			<tr><td>Threes</td><td id="tot3">?</td></tr>
