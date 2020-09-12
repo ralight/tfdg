@@ -818,6 +818,7 @@ function handleHost(data){
 }
 
 function handleSetOption(data){
+	console.log(data);
 	if("allow-calza" in data){
 		options['allow-calza'] = data['allow-calza'];
 		$("#t-o-allow-calza").prop("checked", options['allow-calza']);
@@ -1263,6 +1264,10 @@ $(window).on("load", function(){
 								<div class="custom-control custom-switch text-left">
 									<input type="checkbox" class="custom-control-input" id="t-o-roll-dice-at-start" checked onclick="setBoolOption('roll-dice-at-start', this.checked);">
 									<label class="custom-control-label" for="t-o-roll-dice-at-start">Roll dice to pick starter</label>
+								</div>
+								<div class="custom-control custom-switch text-left">
+									<input type="checkbox" class="custom-control-input" id="t-o-random-max-dice-value" onclick="setBoolOption('random-max-dice-value', this.checked);">
+									<label class="custom-control-label" for="t-o-random-max-dice-value">Random max dice value</label>
 								</div>
 								<div class="form-group text-left mt-1">
 									Maximum dice count:

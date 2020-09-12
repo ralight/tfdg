@@ -92,8 +92,9 @@ struct tfdg_room_options{
 	int max_dice;
 	int max_dice_value;
 	bool allow_calza;
-	bool roll_dice_at_start;
 	bool losers_see_dice;
+	bool random_max_dice_value;
+	bool roll_dice_at_start;
 	bool show_results_table;
 };
 
@@ -150,6 +151,7 @@ static cJSON *json_delete_game(cJSON *j_game);
 static void tfdg_handle_player_lost(struct tfdg_room *room_s, struct tfdg_player *player_s);
 void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state);
 void room_pre_roll_init(struct tfdg_room *room_s);
+void publish_int_option(struct tfdg_room *room_s, const char *option, int value);
 cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s);
 
 
@@ -318,6 +320,11 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 	if(room_s->options.max_dice_value != 6){
 		jtmp = cJSON_CreateNumber(room_s->options.max_dice_value);
 		cJSON_AddItemToObject(game, "max-dice-value", jtmp);
+	}
+
+	if(room_s->options.random_max_dice_value != true){
+		jtmp = cJSON_CreateBool(room_s->options.random_max_dice_value);
+		cJSON_AddItemToObject(game, "random-max-dice-value", jtmp);
 	}
 
 	jtmp = cJSON_CreateString(reason);
@@ -1591,7 +1598,7 @@ static cJSON *player_create_json(void)
 }
 
 
-void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player_s, unsigned char *bytes)
+void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player_s, unsigned char *bytes, int max_dice_value)
 {
 	int i;
 	cJSON *j_array;
@@ -1600,7 +1607,7 @@ void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player
 	j_array = cJSON_CreateArray();
 
 	for(i=0; i<player_s->dice_count; i++){
-		player_s->dice_values[i] = (bytes[i]%room_s->options.max_dice_value)+1;
+		player_s->dice_values[i] = (bytes[i]%max_dice_value)+1;
 		jtmp = cJSON_CreateNumber(player_s->dice_values[i]);
 		cJSON_AddItemToArray(j_array, jtmp);
 		room_s->totals[player_s->dice_values[i]-1]++;
@@ -1909,13 +1916,15 @@ void tfdg_new_round(struct tfdg_room *room_s)
 	int count;
 	unsigned char bytes[1000];
 	cJSON *tree, *jtmp;
+	int max_dice_value;
 
 	// FIXME - checks on current state
 	if(room_s->player_count > 199){
 		/* buffer size protection */
 		return;
 	}
-	count = room_s->player_count*room_s->options.max_dice;
+	count = room_s->player_count*room_s->options.max_dice + 1;
+	/* +1 is for random_max_dice_value */
 
 	CDL_FOREACH(room_s->players, p){
 		if(p->dice_count == 0){
@@ -1930,10 +1939,16 @@ void tfdg_new_round(struct tfdg_room *room_s)
 	room_set_round_winner(room_s, NULL);
 
 	if(RAND_bytes(bytes, count) == 1){
+		if(room_s->round == 1 || room_s->options.random_max_dice_value == false){
+			max_dice_value = room_s->options.max_dice_value;
+		}else{
+			max_dice_value = 3 + (bytes[count-1] % (room_s->options.max_dice_value - 3 + 1));
+			publish_int_option(room_s, "max-dice-value", max_dice_value);
+		}
 		room_set_state(room_s, tgs_playing_round);
 		i = 0;
 		CDL_FOREACH(room_s->players, p){
-			player_set_dice_values(room_s, p, &bytes[room_s->options.max_dice*i]);
+			player_set_dice_values(room_s, p, &bytes[room_s->options.max_dice*i], max_dice_value);
 			player_set_state(p, tps_awaiting_dice);
 			i++;
 		}
@@ -2689,6 +2704,17 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 
 					publish_int_option(room_s, "max-dice-value", ival);
 				}
+			}
+		}else if(strcmp(j_option->valuestring, "random-max-dice-value") == 0){
+			if(cJSON_IsBool(j_value)){
+				room_set_option_bool(room_s, &room_s->options.random_max_dice_value, "random-max-dice-value", cJSON_IsTrue(j_value));
+
+				printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
+						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
+						"random-max-dice-value", cJSON_IsTrue(j_value));
+
+				publish_bool_option(room_s, "random-max-dice-value", cJSON_IsTrue(j_value));
 			}
 		}else if(strcmp(j_option->valuestring, "allow-calza") == 0){
 			if(cJSON_IsBool(j_value)){
