@@ -6,6 +6,8 @@
 		<title>TFDG</title>
 		<link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
 		<link href="css/dice.css" rel="stylesheet" type="text/css">
+		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+
 		<link rel="icon" href="img/favicon.png" sizes="16x16" id="icon16">
 		<link rel="icon" href="img/favicon-32.png" sizes="32x32" id="icon32">
 		<link rel="icon" href="img/favicon-152.png" sizes="152x152">
@@ -1387,243 +1389,598 @@ $(window).on("load", function(){
 	<div class="container" id="rules">
 		<div class="row">
 			<div class="col">
-				<h1 class="mb-3">How to play</h1>
-				<p>As with many games, explaining the rules can seem pretty
-				complicated. This isn't a difficult game though, so either
-				read the below or pick it up as you go along, assuming you're
-				playing with experienced players.</p>
+				<h2 class="panel-title" data-toggle="collapse" data-target="#fold-how-to">How to play</h2>
+				<div id="fold-how-to" class="collapse multi-collapse">
+					<p>As with many games, explaining the rules can seem pretty
+					complicated. This isn't a difficult game though, so either
+					read the below or pick it up as you go along, assuming you're
+					playing with experienced players.</p>
 
-				<p>Every player starts with five dice. The aim of the game is
-				to be the last player with any dice. The game consists of a
-				number of rounds where players can only see their own dice, and
-				take turns to make calls predicting what dice are present.</p>
+					<p>Every player starts with five dice. The aim of the game is
+					to be the last player with any dice. The game consists of a
+					number of rounds where players can only see their own dice, and
+					take turns to make calls predicting what dice are present.</p>
 
-				<h2>Starting the game</h2>
-				<p>When you join a room that has not got a game playing, you
-				will see all of the current players. Your player has a blue
-				border as shown. The arrow indicates the direction of play.</p>
+					<p>The full instructions begin below, but if you can also see an <a href="#example">example game</a>.</p>
 
-				<div class="row justify-content-center">
-					<div class="card text-center m-1 border-info" style="border-width:2px">
-						<div class="card-header" style="padding:0.5rem 1.25rem">Your name here ⇨</div>
-						<div class="card-body" style="padding:0.5rem">
-							<table class="table table-sm table-borderless" style="margin:0"><tr>
-								<td><div class="dice diceU"></div></td><td><div class="dice diceU"></div></td>
-								<td><div class="dice diceU"></div></td><td><div class="dice diceU"></div></td>
-								<td><div class="dice diceU"></div></td>
-							</tr></table>
+					<h2>Starting the game</h2>
+					<p>When you join a room that has not got a game playing, you
+					will see all of the current players. Your player has a blue
+					border as shown. The arrow indicates the direction of play.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Your name here ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div><div class="dice diceU"></div>
+								<div class="dice diceU"></div><div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+					</div>
+					<p>The host (indicated by the lightning bolt) should wait until
+					all players are present, then press <button type="button"
+					class="btn-sm btn-success m-1">Start Game</button>. The host
+					also has the ability to change game settings before the game starts
+					- see the cog, or to remove players at any time by clicking on
+					them.</p>
+
+					<h2>The first round</h2>
+					<p>All players should click the
+					<button type="button" class="btn-sm btn-success m-1">Roll</button>
+					to roll a single dice. The player with the highest value
+					becomes the first player to make a call. If there is a draw,
+					keep rolling until there is a winner. The starter for each
+					round is highlighted in green. Once the starter is decided,
+					click <button type="button" class="btn-sm btn-success m-1">Roll</button>
+					again to receive your dice.</p>
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Starter ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div><div class="dice dice3"></div>
+								<div class="dice dice3"></div><div class="dice dice4"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+					</div>
+					<p>The call (which is made through the video/audio call) should
+					be of the form "four fives", which means "I predict that there
+					are at least four dice on the table that have five spots
+					showing". The next player (indicated by the arrows) has to
+					either make a larger call, or call Dudo ("I doubt").</p>
+					<p>For the first call, it is not allowed to start with a dice
+					value of one, because ones are special in most cases (explained
+					below). This means the lowest value starting call is "one
+					two".</p>
+					<p>The player above may wish to consider a call of "threes", or
+					they may decide to bluff about what dice they have.</p>
+
+					<h2>Increasing the call</h2>
+					<p>To make a larger call, the next player has to either
+					increase the quantity of dice to increase the dice value, or
+					even both. If you increase the quantity of dice then it is
+					allowed to decrease the dice value. By making a larger call,
+					the player accepts the call of the previous player, and play
+					moves on to the next player who then either raises the call, or
+					calls Dudo.</p>
+					<p>The diagram below shows some example possible calls,
+					assuming a first call of "five fours". The first option "five
+					fives" increases the dice value only. The second example, "six
+					fours" increases the dice quantity but leaves the dice value
+					unchanged. The third example, "six twos", increases the dice
+					quantity and takes the opportunity to reduce the dice value. It
+					is perfectly acceptable to make bigger jumps, so a call of
+					"eight sixes" in this case may be bold, but is allowed.</p>
+					<p>The remaining two options are explained in the sections
+					below.</p>
+					<div class="row justify-content-center">
+					<img src="img/tfdg-call1.svg" class="m-3"/>
+					</div>
+
+					<h2>Ones are wildcards</h2>
+					<p>For most of the game, the dice value of one can be used as a
+					wildcard value which matches with all other dice values. This
+					means that a call of "five fours" actually means all dice
+					values that are either four or one. With 25 dice, you would
+					expect there to be approximately eight of each value from two
+					to six. When making a new call, it is possible to change from
+					using the regular dice values of two to six, to calling "ones"
+					instead. This is shown in the fourth option in the diagram
+					above. When a call with ones is made, the quantity of dice
+					called must be halved and rounded up if necessary. So a call of
+					"four fives" could be followed by a call of "two ones", or a
+					call of "five sixes" could be followed by a call of "three
+					ones".</p>
+					<p>When a call of ones is made, it is only the dice with
+					ones showing that count.</p>
+					<p>It is also possible to respond to a call of "ones" by
+					changing back to a call of dice values two to six. To do this,
+					the quantity of dice called must be doubled, plus one.
+					So a call of "two ones" could be followed by a call
+					of "five threes", but not "four threes". A call of "six ones"
+					could be followed by a call of "thirteen twos".</p>
+					<p>The player starting a round is not allowed to have their
+					first call be "ones".</p>
+					<div class="row justify-content-center">
+					<img src="img/tfdg-call2.svg" class="m-3"/>
+					</div>
+
+					<h2>Calling Dudo</h2>
+					<p>When the player that is due to make the next call does not
+					believe the previous players call, they should say Dudo, and
+					click on the
+					<button type="button" class="btn-sm btn-primary m-1">Dudo</button>
+					button. This will result in all dice being shown player by player,
+					starting with the player that called Dudo. Once
+					all dice are shown, the relevant dice values (including ones or
+					not, depending on the call) should be counted up to see whether
+					the call was correct. If the call is correct - there were at
+					least as many dice with the called dice value - then the player
+					who called Dudo lost. If there were not enough dice, the
+					playing making the call lost. After determining which player
+					lost, they should press the
+					<button type="button" class="btn-sm btn-danger m-1">Loser</button>
+					button. The losing player has a dice taken away from them</p>
+					<p>If you press the Loser button when you didn't mean to, don't
+					worry, the Loser button transforms into an
+					<button type="button" class="btn-sm btn-danger m-1">Undo</button>
+					which you can use to go back and let the other player press the
+					loser button.
+
+					<h2>The next round</h2>
+					<p>The player who lost their dice starts the next round, unless
+					they lost their final dice, in which case the player after them
+					starts. Each player clicks "Roll" to get their new dice.</p>
+
+					<h2>Palifico</h2>
+					<p>When a player loses their fourth dice, i.e. they have a
+					single dice left for the first time, it is a special round called
+					Palifico. In this round, ones do not count as wild, and the
+					starting player can start by calling ones if they wish. After
+					the first call, the dice value cannot change. So if the first
+					player calls "one one", the second player could call "two
+					ones", but not "one two". The round then continues as
+					normal.</p>
+
+					<p>A player who is "ex-Palifico", i.e. lost their fourth dice
+					but has survived to later rounds, has a special ability in any
+					later Palifico rounds they take part in. An ex-Palifico player
+					can increase the dice value, but without decreasing the dice
+					quantity. So if the call is "one one", an ex-Palifico player
+					may call "one two". But if the call was "one six", then the
+					ex-Palifico player has no choice but to call "two sixes", or
+					call Dudo, because they are not allowed to reduce the dice
+					value.</p>
+
+					<p>When there are only two players remaining Palifico rounds do
+					not apply.</p>
+
+					<h2>Calza</h2>
+					<p>If at some point in a round, you decide that the call that
+					has just been made is exactly correct, and you are neither the
+					person making the call nor the person who has to make the next
+					call, then you can say "Calza" and click the
+					<button type="button" class="btn-sm btn-warning m-1">Calza</button>
+					button.  At this point, the dice are shown and counted up as
+					normal. If the call was exactly right, i.e. for a call of "five
+					fives" there must be exactly five fives, including wildcards,
+					then you won the call and should click the
+					<button type="button" class="btn-sm btn-warning m-1">Winner</button> button.
+					You will win a dice back, up to a maximum of five dice. If there were six
+					fives, then you lost, should click the
+					<button type="button" class="btn-sm btn-danger m-1">Loser</button>
+					button, and forfeit a dice.</p>
+					<p>Calling Calza on a Palifico round is not allowed, nor if
+					there are only two players in a round.</p>
+
+					<h2>Winning the game</h2>
+					<p>If you are the last player to have any dice remaining,
+					congratulations you won!</p>
+
+					<h2>Leaving the game early</h2>
+					<p>If you need to leave the game before it is complete, use the
+					menu button top right to access the
+					<button type="button" class="btn-sm btn-danger m-1">Leave</button>
+					button, which is only available at the beginning of a round.
+					You will be asked to confirm your decision. When you leave the
+					game your player and dice will be removed and play can
+					continue as before. It is not possible to rejoin a game after
+					leaving.</p>
+					<p>If you are in a game that has not yet started, simply closing the page is enough to leave the game.</p>
+				</div>
+
+				<h2 id="example" class="panel-title" data-toggle="collapse" data-target="#fold-example">Example game</h2>
+				<div id="fold-example" class="collapse multi-collapse">
+					<p>This section shows a full example game between three
+					players. For simplicity, each player only has three dice to
+					start with. The game plays exactly the same with the normal
+					five dice. We are playing as the player Roger.</p>
+
+					<h3>Roll to start</h3>
+					<p>The first rolls are to find the starter. Everybody rolls... and Alice wins.</p>
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice4"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round one</h3>
+					<p>Everybody rolls again to receive their first game dice.
+					There are a total of 9 dice, each with 6 sides. That means each
+					number will appear on average 9/6 = 1.5 times total. On normal
+					rounds, dice with a value of 1 count as a wildcard, so
+					including them in our count means each number 2-5 will appear
+					on average 3 times total.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+					</div>
+					<p>Alice makes the first call: <strong>two fives</strong>.</p>
+					<p>Roger's hand already has two fives, the one and the five, so
+					he cannot call Alice a liar. There are two obvious choices: go
+					to three fives (which is still a plausible call), or go to one
+					one. When moving from a dice value of 2-5 to a value of 1, the
+					quantity of dice always has to halve, rounding up if necessary.
+					Since Alice called fives, that seems a safer bet: <strong>three
+					fives</strong></p>
+					<p>Bob makes his call: <strong>three sixes</strong>.</p>
+					<p>Alice calls <strong>Dudo</strong> on Bob's call, and so all of the dice are shown:</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice6"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+					</div>
+					<p>Bob's call is correct - two sixes and a one for a total of three sixes. Alice loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice6"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice3"></div></td>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round two</h3>
+					<p>Alice lost the previous round, so she makes the first call again.</p>
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+					</div>
+					<p>Alice calls <strong>two sixes</strong>.</p>
+					<p>Roger's choice is three of something, or one one. Given that Alice called sixes, nothing we have points us to a call of three, so: <strong>one one</strong>
+					<p>Bob calls <strong>three threes</strong> (moving from ones back to two-six means double the quantity, plus one)</p>
+					<p>Alice calls <strong>four threes</strong>.</p>
+					<p>There are eight dice remaining, four of anything is daft so Roger calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice2"></div>
+								<div class="dice dice3"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Unbelievably, Alice's call was correct. Roger loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice2"></div>
+								<div class="dice dice3"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div></td>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round three</h3>
+					<p>Roger lost, so he starts the next round.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice1"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Two ones is an excellent hand, but in a normal round
+					starting on ones is not allowed, so a different call is needed.
+					The aim is always to make a call low enough that the next
+					person accept your call but high enough that you don't have to
+					make another call. This isn't always possible... Starting with
+					sixes means that Bob will have to increase the quantity, so:
+					<strong>three sixes</strong>.</p>
+
+					<p>Bob calls <strong>two ones</strong>.</p>
+					<p>Alice calls <strong>Dudo</strong>...</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice1"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>...and loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice1"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round four</h3>
+					<p>Alice has lost her last but one dice, which makes this a palifico round.</p>
+
+					<div class="alert alert-info text-center" role="alert">Palifico round!</div>
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice1"></div>
+								</div>
 						</div>
 					</div>
 				</div>
-				<p>The host (indicated by the lightning bolt) should wait until
-				all players are present, then press <button type="button"
-				class="btn-sm btn-success m-1">Start Game</button>. The host
-				also has the ability to change game settings before the game starts
-				- see the cog, or to remove players at any time by clicking on
-				them.</p>
+				<p>(Example game is currently incomplete)</p>
 
-				<h2>The first round</h2>
-				<p>All players should click the
-				<button type="button" class="btn-sm btn-success m-1">Roll</button>
-				to roll a single dice. The player with the highest value
-				becomes the first player to make a call. If there is a draw,
-				keep rolling until there is a winner. The starter for each
-				round is highlighted in green. Once the starter is decided,
-				click <button type="button" class="btn-sm btn-success m-1">Roll</button>
-				again to receive your dice.</p>
-				<div class="row justify-content-center">
-					<div class="card text-center m-1">
-						<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Starter ⇨</div>
-						<div class="card-body" style="padding:0.5rem">
-							<table class="table table-sm table-borderless" style="margin:0"><tr>
-								<td><div class="dice dice3"></div></td><td><div class="dice dice3"></div></td>
-								<td><div class="dice dice3"></div></td><td><div class="dice dice4"></div></td>
-								<td><div class="dice dice5"></div></td>
-							</tr></table>
-						</div>
-					</div>
-				</div>
-				<p>The call (which is made through the video/audio call) should
-				be of the form "four fives", which means "I predict that there
-				are at least four dice on the table that have five spots
-				showing". The next player (indicated by the arrows) has to
-				either make a larger call, or call Dudo ("I doubt").</p>
-				<p>For the first call, it is not allowed to start with a dice
-				value of one, because ones are special in most cases (explained
-				below). This means the lowest value starting call is "one
-				two".</p>
-				<p>The player above may wish to consider a call of "threes", or
-				they may decide to bluff about what dice they have.</p>
-
-				<h2>Increasing the call</h2>
-				<p>To make a larger call, the next player has to either
-				increase the quantity of dice to increase the dice value, or
-				even both. If you increase the quantity of dice then it is
-				allowed to decrease the dice value. By making a larger call,
-				the player accepts the call of the previous player, and play
-				moves on to the next player who then either raises the call, or
-				calls Dudo.</p>
-				<p>The diagram below shows some example possible calls,
-				assuming a first call of "five fours". The first option "five
-				fives" increases the dice value only. The second example, "six
-				fours" increases the dice quantity but leaves the dice value
-				unchanged. The third example, "six twos", increases the dice
-				quantity and takes the opportunity to reduce the dice value. It
-				is perfectly acceptable to make bigger jumps, so a call of
-				"eight sixes" in this case may be bold, but is allowed.</p>
-				<p>The remaining two options are explained in the sections
-				below.</p>
-				<div class="row justify-content-center">
-				<img src="img/tfdg-call1.svg" class="m-3"/>
+				<h2 class="panel-title" data-toggle="collapse" data-target="#fold-user">User preferences</h2>
+				<div id="fold-user" class="collapse multi-collapse">
+					<p>There is a user preference for controlling sound effects,
+					available in the drop down menu accessible through the cog icon.</p>
 				</div>
 
-				<h2>Ones are wildcards</h2>
-				<p>For most of the game, the dice value of one can be used as a
-				wildcard value which matches with all other dice values. This
-				means that a call of "five fours" actually means all dice
-				values that are either four or one. With 25 dice, you would
-				expect there to be approximately eight of each value from two
-				to six. When making a new call, it is possible to change from
-				using the regular dice values of two to six, to calling "ones"
-				instead. This is shown in the fourth option in the diagram
-				above. When a call with ones is made, the quantity of dice
-				called must be halved and rounded up if necessary. So a call of
-				"four fives" could be followed by a call of "two ones", or a
-				call of "five sixes" could be followed by a call of "three
-				ones".</p>
-				<p>When a call of ones is made, it is only the dice with
-				ones showing that count.</p>
-				<p>It is also possible to respond to a call of "ones" by
-				changing back to a call of dice values two to six. To do this,
-				the quantity of dice called must be doubled, plus one.
-				So a call of "two ones" could be followed by a call
-				of "five threes", but not "four threes". A call of "six ones"
-				could be followed by a call of "thirteen twos".</p>
-				<p>The player starting a round is not allowed to have their
-				first call be "ones".</p>
-				<div class="row justify-content-center">
-				<img src="img/tfdg-call2.svg" class="m-3"/>
+				<h2 class="panel-title" data-toggle="collapse" data-target="#fold-options">Game options</h2>
+				<div id="fold-options" class="collapse multi-collapse">
+					<p>Before the game starts, it is possible to change some
+					options. The host player, normally the first player to create
+					the game and indicated by a lightning icon, is the only player
+					allowed to change the game options.</p>
+					<ul>
+						<li>Allow Calza - is the Calza call enabled (defaults to on)</li>
+						<li>Losers see dice - if set on, then players who have lost
+							will be able to see the dice for all players as the round
+							is being player, not just after Dudo/Calza has been called.
+							Defaults to on.</li>
+						<li>Show results table - if set to on, a summary of all
+							results will be displayed at the end of the round to
+							make counting up easier. Setting this on gives a big
+							advantage to all players because they can very easily see
+							what calls were reasonable in the previous round. Defaults
+							to on.</li>
+						<li>Maximum dice count - choose how many dice to start with
+							(and the maximum count, if playing with Calza). Can
+							range from 3-20.</li>
+						<li>Maximum dice value - choose how many sides the dice
+							should have. Can range from 3-9.</li>
+					</ul>
 				</div>
 
-				<h2>Calling Dudo</h2>
-				<p>When the player that is due to make the next call does not
-				believe the previous players call, they should say Dudo, and
-				click on the
-				<button type="button" class="btn-sm btn-primary m-1">Dudo</button>
-				button. This will result in all dice being shown player by player,
-				starting with the player that called Dudo. Once
-				all dice are shown, the relevant dice values (including ones or
-				not, depending on the call) should be counted up to see whether
-				the call was correct. If the call is correct - there were at
-				least as many dice with the called dice value - then the player
-				who called Dudo lost. If there were not enough dice, the
-				playing making the call lost. After determining which player
-				lost, they should press the
-				<button type="button" class="btn-sm btn-danger m-1">Loser</button>
-				button. The losing player has a dice taken away from them</p>
-				<p>If you press the Loser button when you didn't mean to, don't
-				worry, the Loser button transforms into an
-				<button type="button" class="btn-sm btn-danger m-1">Undo</button>
-				which you can use to go back and let the other player press the
-				loser button.
+				<h2 class="panel-title" data-toggle="collapse" data-target="#fold-removing">Removing players</h2>
+				<div id="fold-removing" class="collapse multi-collapse">
+					<p>The host player has the ability to remove players from a
+					game at the end of a round. To do this, click on the player
+					name and then confirm your decision.</p>
+				</div>
 
-				<h2>The next round</h2>
-				<p>The player who lost their dice starts the next round, unless
-				they lost their final dice, in which case the player after them
-				starts. Each player clicks "Roll" to get their new dice.</p>
-
-				<h2>Palifico</h2>
-				<p>When a player loses their fourth dice, i.e. they have a
-				single dice left for the first time, it is a special round called
-				Palifico. In this round, ones do not count as wild, and the
-				starting player can start by calling ones if they wish. After
-				the first call, the dice value cannot change. So if the first
-				player calls "one one", the second player could call "two
-				ones", but not "one two". The round then continues as
-				normal.</p>
-
-				<p>A player who is "ex-Palifico", i.e. lost their fourth dice
-				but has survived to later rounds, has a special ability in any
-				later Palifico rounds they take part in. An ex-Palifico player
-				can increase the dice value, but without decreasing the dice
-				quantity. So if the call is "one one", an ex-Palifico player
-				may call "one two". But if the call was "one six", then the
-				ex-Palifico player has no choice but to call "two sixes", or
-				call Dudo, because they are not allowed to reduce the dice
-				value.</p>
-
-				<p>When there are only two players remaining Palifico rounds do
-				not apply.</p>
-
-				<h2>Calza</h2>
-				<p>If at some point in a round, you decide that the call that
-				has just been made is exactly correct, and you are neither the
-				person making the call nor the person who has to make the next
-				call, then you can say "Calza" and click the
-				<button type="button" class="btn-sm btn-warning m-1">Calza</button>
-				button.  At this point, the dice are shown and counted up as
-				normal. If the call was exactly right, i.e. for a call of "five
-				fives" there must be exactly five fives, including wildcards,
-				then you won the call and should click the
-				<button type="button" class="btn-sm btn-warning m-1">Winner</button> button.
-				You will win a dice back, up to a maximum of five dice. If there were six
-				fives, then you lost, should click the
-				<button type="button" class="btn-sm btn-danger m-1">Loser</button>
-				button, and forfeit a dice.</p>
-				<p>Calling Calza on a Palifico round is not allowed, nor if
-				there are only two players in a round.</p>
-
-				<h2>Winning the game</h2>
-				<p>If you are the last player to have any dice remaining,
-				congratulations you won!</p>
-
-				<h2>Leaving the game early</h2>
-				<p>If you need to leave the game before it is complete, use the
-				menu button top right to access the
-				<button type="button" class="btn-sm btn-danger m-1">Leave</button>
-				button, which is only available at the beginning of a round.
-				You will be asked to confirm your decision. When you leave the
-				game your player and dice will be removed and play can
-				continue as before. It is not possible to rejoin a game after
-				leaving.</p>
-				<p>If you are in a game that has not yet started, simply closing the page is enough to leave the game.</p>
-
-				<h2>User preferences</h2>
-				<p>There are is a user preference for controlling sound
-				effects, available in
-				the drop down menu accessible through the cog icon.</p>
-
-				<h2>Game options</h2>
-				<p>Before the game starts, it is possible to change some
-				options. The host player, normally the first player to create
-				the game and indicated by a lightning icon, is the only player
-				allowed to change the game options.</p>
-				<ul>
-					<li>Allow Calza - is the Calza call enabled (defaults to on)</li>
-					<li>Losers see dice - if set on, then players who have lost
-						will be able to see the dice for all players as the round
-						is being player, not just after Dudo/Calza has been called.
-						Defaults to on.</li>
-					<li>Show results table - if set to on, a summary of all
-						results will be displayed at the end of the round to
-						make counting up easier. Setting this on gives a big
-						advantage to all players because they can very easily see
-						what calls were reasonable in the previous round. Defaults
-						to on.</li>
-					<li>Maximum dice count - choose how many dice to start with
-						(and the maximum count, if playing with Calza). Can
-						range from 3-20.</li>
-					<li>Maximum dice value - choose how many sides the dice
-						should have. Can range frmo 3-9.</li>
-				</ul>
-
-				<h2>Removing players</h2>
-				<p>The host player has the ability to remove players from a
-				game at the end of a round. To do this, click on the player
-				name and then confirm your decision.</p>
-
-				<h2>Privacy</h2>
-				<p>Review cookie and data storage on the <a href="privacy.html">Privacy</a> page.</p>
+				<h2 class="panel-title" data-toggle="collapse" data-target="#fold-privacy">Privacy</h2>
+				<div id="fold-privacy" class="collapse multi-collapse">
+					<p>Review cookie and data storage on the <a href="privacy.html">Privacy</a> page.</p>
+				</div>
 			</div>
 		</div>
 	</div>
