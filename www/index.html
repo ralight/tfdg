@@ -227,7 +227,7 @@ function addPlayerCard(data) {
 		'<div class="card-header" style="padding:0.5rem 1.25rem" onclick="kickPlayerConfirm(\''+name+'\',\''+uuid+'\');"><span>'+ishost+'</span>'+name+' ⇨</div>'+
 			'<div class="card-body" style="padding:0.5rem">';
 	for(var i=1; i<options['max-dice']+1; i++){
-		card += '<div class="dice diceU float-left" style="margin:0.1rem" id="'+uuid+'-d'+i+'"></div>';
+		card += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
 		if(i%5 == 0){
 			card += "<br>";
 		}
@@ -246,7 +246,7 @@ function resetPlayerCardDice(){
 		$(this).empty();
 		var card = "";
 		for(var i=1; i<options['max-dice']+1; i++){
-			card += '<div class="dice diceU float-left" style="margin:0.1rem" id="'+uuid+'-d'+i+'"></div>';
+			card += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
 			if(i%5 == 0){
 				card += "<br>";
 			}
@@ -1920,6 +1920,89 @@ $(window).on("load", function(){
 							</div>
 						</div>
 						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice2"></div>
+								</div>
+						</div>
+					</div>
+					<p>Alice calls <strong>one one</strong>. Ones are not wildcards on a Palifico round, and starting on ones is allowed.</p>
+					<p>On a Palifico round a normal player can't change the dice value, so Roger has no choice but to call <strong>two ones</strong>.</p>
+					<p>Bob calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice2"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Roger loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice3"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice2"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round five</h3>
+					<p>Roger has lost his last but one dice, which makes this a palifico round.</p>
+
+					<div class="alert alert-info text-center" role="alert">Palifico round!</div>
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
 							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
 							<div class="card-body" style="padding:0.5rem">
 								<div class="dice diceU"></div>
@@ -1930,13 +2013,439 @@ $(window).on("load", function(){
 						<div class="card text-center m-1 border-info" style="border-width:2px">
 							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
 							<div class="card-body" style="padding:0.5rem">
-								<div class="dice dice1"></div>
-								<div class="dice dice1"></div>
+								<div class="dice dice5"></div>
 								</div>
 						</div>
 					</div>
+					<p>Roger calls <strong>one five</strong>. It's a good idea not to lie on Palifico rounds.</p>
+					<p>Bob calls <strong>two fives</strong>.</p>
+					<p>Alice calls <strong>two sixes</strong>. Alice is ex-Palifico, so can change the dice value upwards only (she couldn't have called three fours, for example).</p>
+					<p>Roger calls <strong>three sixes</strong>.</p>
+					<p>Bob calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"></div>
+								<div class="dice dice6"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Bob loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice6"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+					</div>
+
+
+					<h3>Round six</h3>
+					<p>This is a normal round again. Ones are wild, and starting on a one is not allowed.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"></div>
+								</div>
+						</div>
+					</div>
+					<p>Bob calls <strong>one four</strong>.</p>
+					<p>Alice calls <strong>one five</strong>.</p>
+					<p>Roger calls <strong>one six</strong>.</p>
+					<p>Bob calls <strong>one one</strong>.</p>
+					<p>Roger calls <strong>Calza</strong>. This is a prediction that the call is <strong>exactly</strong> right. The person making the call, and the person receiving the call are not allowed to call Calza (so Calza is not allowed for two players).</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Roger is correct, so wins a dice.</p>
+
+					<h3>Round seven</h3>
+					<p>Roger won, so he is the starter.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice4"></div>
+								<div class="dice dice6"></div>
+								</div>
+						</div>
+					</div>
+					<p>Roger calls <strong>one four</strong>.</p>
+					<p>Bob calls <strong>three fours</strong>.</p>
+					<p>Alice calls <strong>two ones</strong>.</p>
+					<p>Roger calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice4"></div>
+								<div class="dice dice4"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice4"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Alice loses a dice, and is out of the game.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice4"></div>
+								<div class="dice dice4"></div>
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Alice ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"><img src="img/diceX.svg" width="20" height="20"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice4"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round eight</h3>
+
+					<p>Roger is the next player after Alice, so he starts the next round.</p>
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice6"></div>
+								</div>
+						</div>
+					</div>
+					<p>Roger calls <strong>one six</strong>.</p>
+					<p>Bob calls <strong>two sixes</strong>.</p>
+					<p>Roger calls <strong>three sixes</strong>.</p>
+					<p>Bob calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice6"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Bob loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice6"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice3"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round nine</h3>
+
+					<p>Bob lost, so starts the round.</p>
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice2"></div>
+								</div>
+						</div>
+					</div>
+					<p>Bob calls <strong>one three</strong>.</p>
+					<p>Roger calls <strong>one one</strong>.</p>
+					<p>Bob calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice2"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Bob loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice1"></div>
+								<div class="dice dice2"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round ten</h3>
+
+					<p>Bob has lost his last but one dice, but there are only two players so this is not a Palifico round.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice dice4"></div>
+								</div>
+						</div>
+					</div>
+					<p>Bob calls <strong>one six</strong>.</p>
+					<p>Roger calls <strong>one one</strong>.</p>
+					<p>Bob calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Roger loses a dice.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice6"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice2"><img src="img/diceX.svg" width="20" height="20"></div>
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+					</div>
+
+					<h3>Round eleven</h3>
+
+					<p>Roger lost, so starts the round. One dice each, this is a normal round and the most stressful round of the game.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1">
+							<div class="card-header" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+								<div class="dice diceU"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-info" style="border-width:2px">
+							<div class="card-header bg-success text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"></div>
+								</div>
+						</div>
+					</div>
+					<p>Roger calls <strong>one five</strong>.</p>
+					<p>Bob calls <strong>one one</strong>.</p>
+					<p>Roger calls <strong>Dudo</strong>.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-danger">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Bob ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice4"></div>
+							</div>
+						</div>
+						<div class="card text-center m-1 border-danger" style="border-width:2px">
+							<div class="card-header bg-danger text-white" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice dice5"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Bob loses a dice, and Roger wins the game.</p>
+
+					<div class="row justify-content-center">
+						<div class="card text-center m-1 border-warning" style="border-width:2px">
+							<div class="card-header bg-warning" style="padding:0.5rem 1.25rem">Roger ⇨</div>
+							<div class="card-body" style="padding:0.5rem">
+								<div class="dice star"></div>
+							</div>
+						</div>
+					</div>
+
+					<p>Just a note - this example was meant to show certain situations that arise in the game: don't take it as a strategy guide.</p>
 				</div>
-				<p>(Example game is currently incomplete)</p>
 
 				<h2 class="panel-title" data-toggle="collapse" data-target="#fold-user">User preferences</h2>
 				<div id="fold-user" class="collapse multi-collapse">

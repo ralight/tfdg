@@ -10,6 +10,8 @@ td {
 .dice {
 	width: 22px;
 	height: 22px;
+	float: left;
+	margin: 0.1rem;
 }
 
 .diceU {
@@ -61,14 +63,14 @@ svg.bannerimg {
 	z-index: -1;
 	display: block;
 	margin: 0 auto;
-} 
-		  
+}
+
 path {
-	stroke: black; 
+	stroke: black;
 	stroke-width: 3px;
 	stroke-linecap: round;
 	fill: none;
-}   
+}
 
 .tow-top {
 	stroke: black;
@@ -81,4 +83,21 @@ path {
 
 .flag-middle {
 	stroke: none;
+}
+
+.panel-title {
+	position: relative;
+ }
+
+ .panel-title::after {
+	content: "\f107";
+	color: #333;
+	top: 5px;
+	right: 0px;
+	position: absolute;
+	font-family: "FontAwesome"
+}
+
+.panel-title[aria-expanded="true"]::after {
+	content: "\f106";
 }
