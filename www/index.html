@@ -824,6 +824,9 @@ function handleSetOption(data){
 	if("roll-dice-at-start" in data){
 		$("#t-o-roll-dice-at-start").prop("checked", data['roll-dice-at-start']);
 	}
+	if("random-max-dice-value" in data){
+		$("#t-o-random-max-dice-value").prop("checked", data['random-max-dice-value']);
+	}
 	if("show-results-table" in data){
 		if(data['show-results-table']){
 			$("#summary-results").removeClass("d-none");

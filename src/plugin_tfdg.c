@@ -322,7 +322,7 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 		cJSON_AddItemToObject(game, "max-dice-value", jtmp);
 	}
 
-	if(room_s->options.random_max_dice_value != true){
+	if(room_s->options.random_max_dice_value != false){
 		jtmp = cJSON_CreateBool(room_s->options.random_max_dice_value);
 		cJSON_AddItemToObject(game, "random-max-dice-value", jtmp);
 	}
