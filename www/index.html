@@ -24,26 +24,26 @@
 
 	<script>
 
-var mqtt = null;
-var myname = "";
-var myuuid = "";
-var havelost = false;
-var palifico = null;
-var snd_roll = null;
-var sounds = null;
-var first_sound = true;
-var name_uuid = {};
-var room_uuid = "0001";
-var have_state = false;
-var player_results = [];
-var dudo_candidates = [];
-var calza_candidate = null;
+let mqtt = null;
+let myname = "";
+let myuuid = "";
+let havelost = false;
+let palifico = null;
+let snd_roll = null;
+let sounds = null;
+let first_sound = true;
+let name_uuid = {};
+let room_uuid = "0001";
+let have_state = false;
+let player_results = [];
+let dudo_candidates = [];
+let calza_candidate = null;
 const dice_styles = "star diceU dice1 dice2 dice3 dice4 dice5 dice6 dice7 dice8 dice9";
 const number_plurals = ["Ones", "Twos", "Threes", "Fours", "Fives", "Sixes", "Sevens", "Eights", "Nines"];
 const timeout_times = [0, 100, 200, 500, 1000, 2000, 3000];
-var summary_results = null;
+let summary_results = null;
 const snd_player = new Audio("sound/silence.mp3");
-var options = {
+let options = {
 	"allow-calza": true,
 	"max-dice": 5,
 	"max-dice-value": 6,
@@ -51,15 +51,15 @@ var options = {
 	"sounds-enabled": true,
 	"results-timeout-value": 1000
 };
-var preRollRound = 1;
+let preRollRound = 1;
 
-var topic_prefix = "tfdg/"+room_uuid+"/";
-var palifico_round = false;
-var dice_count = options['max-dice'];
-var player_to_remove = null;
-var game_playing = false;
-var host = "";
-var starter = null;
+let topic_prefix = "tfdg/"+room_uuid+"/";
+let palifico_round = false;
+let dice_count = options['max-dice'];
+let player_to_remove = null;
+let game_playing = false;
+let host = "";
+let starter = null;
 
 function uuidv4() {
 	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
@@ -196,7 +196,7 @@ function setLobby(data){
 
 	handleSetOption(data['options']);
 
-	var players = data['players'];
+	let players = data['players'];
 	for(i=0; i<players.length; i++){
 		addPlayerCard(players[i]);
 	}
@@ -216,17 +216,17 @@ function play_sound(snd)
 
 
 function addPlayerCard(data) {
-	var name = escapeHtml(data['name']);
-	var uuid = escapeHtml(data['uuid']);
+	let name = escapeHtml(data['name']);
+	let uuid = escapeHtml(data['uuid']);
 
-	var ishost = "";
+	let ishost = "";
 	if(uuid == host){
 		ishost = "<img src='img/host.svg' width='20' height='20' class='mr-1'/>";
 	}
-	var card = '<div class="card text-center float-left m-1" id="'+uuid+'">'+
+	let card = '<div class="card text-center float-left m-1" id="'+uuid+'">'+
 		'<div class="card-header" style="padding:0.5rem 1.25rem" onclick="kickPlayerConfirm(\''+name+'\',\''+uuid+'\');"><span>'+ishost+'</span>'+name+' ⇨</div>'+
 			'<div class="card-body" style="padding:0.5rem">';
-	for(var i=1; i<options['max-dice']+1; i++){
+	for(let i=1; i<options['max-dice']+1; i++){
 		card += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
 		if(i%5 == 0){
 			card += "<br>";
@@ -240,12 +240,11 @@ function addPlayerCard(data) {
 }
 
 function resetPlayerCardDice(){
-	var uuid = "";
 	$("#gametable div div.card-body").each(function(index){
-		var uuid = $(this).find("div")[0].id.substr(0, 36);
+		let uuid = $(this).find("div")[0].id.substr(0, 36);
 		$(this).empty();
-		var card = "";
-		for(var i=1; i<options['max-dice']+1; i++){
+		let card = "";
+		for(let i=1; i<options['max-dice']+1; i++){
 			card += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
 			if(i%5 == 0){
 				card += "<br>";
@@ -308,8 +307,7 @@ function preRollInit(data){
 	$("#preroll-text").removeClass("d-none");
 	while(data.length > 0){
 		p = data.shift()
-		var uuid = p['uuid'];
-		if(uuid == myuuid){
+		if(p['uuid'] == myuuid){
 			enable_roll(true);
 		}
 	}
@@ -319,8 +317,8 @@ function preRollInit(data){
 function preRoll(data){
 	clearBGs();
 
-	var uuid = data['uuid'];
-	var v = data['value'];
+	let uuid = data['uuid'];
+	let v = data['value'];
 
 	$("#"+uuid+"-d"+preRollRound).empty();
 	$("#"+uuid+"-d"+preRollRound).removeClass(dice_styles);
@@ -338,7 +336,7 @@ function preRollResults(data){
 	}
 	while(data.length > 0){
 		p = data.shift()
-		var uuid = p['uuid'];
+		let uuid = p['uuid'];
 		$("#"+uuid+" div.card-header").addClass("bg-success");
 		$("#"+uuid).addClass("border-success text-white");
 		if(uuid == myuuid){
@@ -400,7 +398,7 @@ function setCookies(name, uuid){
 
 function getCookies(){
 	document.cookie.split(";").forEach(function(cookie){
-		var parts = cookie.split("=");
+		let parts = cookie.split("=");
 		switch(parts[0].trim().toLowerCase()){
 			case "name":
 				myname = decodeURIComponent(parts[1]);
@@ -426,7 +424,7 @@ function getCookies(){
 function setStarter(data){
 	clearBGs();
 	starter = data;
-	var uuid = data['uuid'];
+	let uuid = data['uuid'];
 	$("div.card div.card-header").removeClass("bg-success");
 	$("#"+uuid+" div.card-header").addClass("bg-success");
 	$("div.card").removeClass("border-success text-white");
@@ -485,10 +483,10 @@ function showSummary(heading)
 
 function allowLosers(){
 	if(dudo_candidates.length == 2){
-		var player1 = dudo_candidates[0];
-		var player2 = dudo_candidates[1];
-		var uuid1 = player1['uuid'];
-		var uuid2 = player2['uuid'];
+		let player1 = dudo_candidates[0];
+		let player2 = dudo_candidates[1];
+		let uuid1 = player1['uuid'];
+		let uuid2 = player2['uuid'];
 		$("#"+uuid1+" div.card-header").addClass("bg-danger");
 		$("#"+uuid1).addClass("border-danger text-white");
 		$("#"+uuid2+" div.card-header").addClass("bg-danger");
@@ -497,8 +495,8 @@ function allowLosers(){
 			enable_loser(true);
 		}
 	}else if(calza_candidate != null){
-		var player1 = calza_candidate;
-		var uuid1 = player1['uuid'];
+		let player1 = calza_candidate;
+		let uuid1 = player1['uuid'];
 		$("#"+uuid1+" div.card-header").addClass("bg-danger");
 		$("#"+uuid1).addClass("border-danger text-white");
 		if(uuid1 == myuuid && havelost == false){
@@ -515,9 +513,9 @@ function allowLosers(){
 function showPlayerDiceQuick(){
 	clearBGs();
 	while(player_results.length > 0){
-		p = player_results.shift()
-		var uuid = p['uuid'];
-		var j;
+		let p = player_results.shift()
+		let uuid = p['uuid'];
+		let j;
 
 		p['dice'].sort();
 		for(j=0;j<p['dice'].length;j++){
@@ -538,12 +536,12 @@ function showPlayerDiceQuick(){
 function showPlayerDice(){
 	clearBGs();
 	if(player_results.length > 0){
-		p = player_results.shift()
-		var uuid = p['uuid'];
+		let p = player_results.shift()
+		let uuid = p['uuid'];
 
 		$("#"+uuid+" div.card-header").addClass("bg-warning");
 		p['dice'].sort();
-		var j;
+		let j;
 		for(j=0;j<p['dice'].length;j++){
 			v = p['dice'][j];
 			$("#"+uuid+"-d"+(j+1)).empty();
@@ -564,11 +562,12 @@ function showPlayerDice(){
 }
 
 function showMyDice(data){
-	var i;
+	let i;
+	let uuid;
 	data.sort();
 	for(i=0; i<data.length; i++){
-		v = data[i];
-		var uuid = myuuid;
+		let v = data[i];
+		uuid = myuuid;
 		$("#"+uuid+"-d"+(i+1)).empty();
 		$("#"+uuid+"-d"+(i+1)).removeClass(dice_styles);
 		if(v != " "){
@@ -585,7 +584,7 @@ function showMyDice(data){
 
 
 function handleRoundLoser(data){
-	var uuid = data["uuid"];
+	let uuid = data["uuid"];
 	$("#"+uuid+"-d1").empty();
 	$("#"+uuid+"-d1").append('<img src="img/diceX.svg" width="20" height="20"/>');
 
@@ -606,7 +605,7 @@ function handleRoundLoser(data){
 
 
 function handleRoundWinner(data){
-	var uuid = data["uuid"];
+	let uuid = data["uuid"];
 	/*$("#"+uuid+"-d"+options['max-dice']).empty();*/
 	/*$("#"+uuid+"-d"+options['max-dice']).addClass("diceU");*/
 
@@ -753,7 +752,7 @@ function handleUndoLoser(data){
 }
 
 function handleUndoWinner(data){
-	var uuid = data["uuid"];
+	let uuid = data["uuid"];
 	$("#gametable div div.card-body div").empty()
 
 	if(uuid == myuuid){
@@ -774,8 +773,7 @@ function handleLoserResults(data)
 
 function handleSoundHigher(data)
 {
-	console.log(data);
-	var num = data['sound'] % 7 + 1;
+	let num = data['sound'] % 7 + 1;
 	if(num < 0){
 		return;
 	}
@@ -785,8 +783,7 @@ function handleSoundHigher(data)
 
 function handleSoundExact(data)
 {
-	console.log(data);
-	var num = data['sound'] % 6 + 1;
+	let num = data['sound'] % 6 + 1;
 	if(num < 0){
 		return;
 	}
@@ -852,8 +849,8 @@ function handleSetOption(data){
 		$("#max-dice-value-range").val(options['max-dice-value']);
 
 		$("#summary-results-table").empty();
-		var tab = "<tr><th></th><th id=\"results-header\">Dice</th></tr>";
-		for(var i=0; i<options['max-dice-value']; i++){
+		let tab = "<tr><th></th><th id=\"results-header\">Dice</th></tr>";
+		for(let i=0; i<options['max-dice-value']; i++){
 			tab += '<tr><td>'+number_plurals[i]+'<td id="tot'+(i+1)+'">?</td></tr>';
 		}
 		$("#summary-results-table").append(tab);
@@ -862,12 +859,12 @@ function handleSetOption(data){
 
 function startMQTT(){
 	console.log("Start");
-	var clientId = "";
-	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for (var i = 0; i < 20; i++){
+	let clientId = "";
+	let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	for (let i = 0; i < 20; i++){
 		clientId += chars.charAt(Math.floor(Math.random() * chars.length));
 	}
-	var lwt = new Paho.Message(JSON.stringify(name_uuid));
+	let lwt = new Paho.Message(JSON.stringify(name_uuid));
 	lwt.destinationName = topic_prefix+"logout";
 	lwt.qos = 1;
 	lwt.retained = false;
@@ -887,8 +884,8 @@ function startMQTT(){
 		if(message.destinationName.startsWith(topic_prefix) == false){
 			return;
 		}
-		var cmd = message.destinationName.substr(topic_prefix.length);
-		var data = null;
+		let cmd = message.destinationName.substr(topic_prefix.length);
+		let data = null;
 		if(message.payloadString.length > 0){
 			data = JSON.parse(message.payloadString);
 		}
@@ -1055,7 +1052,7 @@ function copyToClipboard(text) {
         return clipboardData.setData("Text", text);
 
     } else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
-        var textarea = document.createElement("textarea");
+        let textarea = document.createElement("textarea");
         textarea.textContent = text;
         textarea.style.position = "fixed";  // Prevent scrolling to bottom of page in MS Edge.
         document.body.appendChild(textarea);
