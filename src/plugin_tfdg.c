@@ -610,7 +610,9 @@ static cJSON *json_create_lobby_players_obj(struct tfdg_room *room_s)
 	tree = cJSON_CreateArray();
 	CDL_FOREACH(room_s->players, p){
 		j_player = player_to_cjson(p);
-		cJSON_AddItemToArray(tree, j_player);
+		if(j_player){
+			cJSON_AddItemToArray(tree, j_player);
+		}
 	}
 
 	return tree;
@@ -666,8 +668,10 @@ static void easy_publish_player(struct tfdg_room *room_s, const char *topic_suff
 	cJSON *tree;
 
 	tree = player_to_cjson(player_s);
-	easy_publish(room_s, topic_suffix, tree);
-	cJSON_Delete(tree);
+	if(tree){
+		easy_publish(room_s, topic_suffix, tree);
+		cJSON_Delete(tree);
+	}
 }
 
 
@@ -789,13 +793,17 @@ void tfdg_send_current_state(struct tfdg_room *room_s, struct tfdg_player *playe
 		cJSON_AddItemToObject(tree, "pre-roll", jtmp);
 	}else if(room_s->state == tgs_pre_roll_over){
 		jtmp = player_to_cjson(room_s->starter);
-		cJSON_AddItemToObject(tree, "starter", jtmp);
+		if(jtmp){
+			cJSON_AddItemToObject(tree, "starter", jtmp);
+		}
 	}
 
 	/* Starter, my dice */
 	if(room_s->state == tgs_playing_round){
 		jtmp = player_to_cjson(room_s->starter);
-		cJSON_AddItemToObject(tree, "starter", jtmp);
+		if(jtmp){
+			cJSON_AddItemToObject(tree, "starter", jtmp);
+		}
 		if(player_s->state == tps_have_dice){
 			dice = json_create_my_dice_array(player_s);
 			cJSON_AddItemToObject(tree, "dice", dice);
@@ -807,10 +815,14 @@ void tfdg_send_current_state(struct tfdg_room *room_s, struct tfdg_player *playe
 
 		if(room_s->round_loser){
 			round_loser = player_to_cjson(room_s->round_loser);
-			cJSON_AddItemToObject(tree, "round-loser", round_loser);
+			if(round_loser){
+				cJSON_AddItemToObject(tree, "round-loser", round_loser);
+			}
 		}else if(room_s->round_winner){
 			round_winner = player_to_cjson(room_s->round_winner);
-			cJSON_AddItemToObject(tree, "round-winner", round_winner);
+			if(round_winner){
+				cJSON_AddItemToObject(tree, "round-winner", round_winner);
+			}
 		}else{
 			/* Player must have lost all of their dice */
 			round_loser = cJSON_CreateObject();
@@ -2086,15 +2098,17 @@ static cJSON *json_create_results_array(struct tfdg_room *room_s)
 	tree = cJSON_CreateArray();
 	CDL_FOREACH(start, p){
 		player = player_to_cjson(p);
-		array = cJSON_CreateArray();
-		for(i=0; i<p->dice_count; i++){
-			if(p->dice_values[i] != 0){
-				jtmp = cJSON_CreateNumber(p->dice_values[i]);
-				cJSON_AddItemToArray(array, jtmp);
+		if(player){
+			array = cJSON_CreateArray();
+			for(i=0; i<p->dice_count; i++){
+				if(p->dice_values[i] != 0){
+					jtmp = cJSON_CreateNumber(p->dice_values[i]);
+					cJSON_AddItemToArray(array, jtmp);
+				}
 			}
+			cJSON_AddItemToObject(player, "dice", array);
+			cJSON_AddItemToArray(tree, player);
 		}
-		cJSON_AddItemToObject(player, "dice", array);
-		cJSON_AddItemToArray(tree, player);
 	}
 	return tree;
 }
@@ -2238,7 +2252,9 @@ void tfdg_new_round(struct tfdg_room *room_s)
 
 		tree = cJSON_CreateObject();
 		jtmp = player_to_cjson(room_s->starter);
-		cJSON_AddItemToObject(tree, "starter", jtmp);
+		if(jtmp){
+			cJSON_AddItemToObject(tree, "starter", jtmp);
+		}
 
 		jtmp = cJSON_CreateBool(room_s->palifico_round);
 		cJSON_AddItemToObject(tree, "palifico-round", jtmp);
@@ -2361,9 +2377,11 @@ cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s)
 	CDL_FOREACH(room_s->players, p){
 		if(p->state == tps_pre_roll){
 			j_player = player_to_cjson(p);
-			jtmp = cJSON_CreateNumber(p->pre_roll);
-			cJSON_AddItemToObject(j_player, "value", jtmp);
-			cJSON_AddItemToArray(tree, j_player);
+			if(j_player){
+				jtmp = cJSON_CreateNumber(p->pre_roll);
+				cJSON_AddItemToObject(j_player, "value", jtmp);
+				cJSON_AddItemToArray(tree, j_player);
+			}
 		}
 	}
 	return tree;
@@ -2426,7 +2444,9 @@ void tfdg_handle_pre_roll_result(struct tfdg_room *room_s)
 			if(tree == NULL){
 				tree = cJSON_CreateArray();
 			}
-			cJSON_AddItemToArray(tree, j_player);
+			if(j_player){
+				cJSON_AddItemToArray(tree, j_player);
+			}
 			starter = p;
 		}else{
 			player_set_state(p, tps_pre_roll_lost);
@@ -2502,10 +2522,14 @@ static cJSON *json_create_dudo_candidates_object(struct tfdg_room *room_s)
 		tree = cJSON_CreateArray();
 
 		j_player = player_to_cjson(room_s->dudo_caller);
-		cJSON_AddItemToArray(tree, j_player);
+		if(j_player){
+			cJSON_AddItemToArray(tree, j_player);
+		}
 
 		j_player = player_to_cjson(room_s->dudo_caller->prev);
-		cJSON_AddItemToArray(tree, j_player);
+		if(j_player){
+			cJSON_AddItemToArray(tree, j_player);
+		}
 	}
 	return tree;
 }
@@ -2674,9 +2698,15 @@ static void tfdg_handle_winner(struct tfdg_room *room_s)
 	array = room_dice_totals(room_s);
 	cJSON_AddItemToObject(tree, "totals", array);
 
-	j_player = player_to_cjson(room_s->players);
-	cJSON_AddItemToObject(tree, "winner", j_player);
-	easy_publish(room_s, "winner", tree);
+	if(room_s->players){
+		/* There is a bug somewhere that means we can't be sure room_s->players is valid at this point.
+		 * We'd be best not to crash at least. */
+		j_player = player_to_cjson(room_s->players);
+		if(j_player){
+			cJSON_AddItemToObject(tree, "winner", j_player);
+		}
+		easy_publish(room_s, "winner", tree);
+	}
 	cJSON_Delete(tree);
 
 	room_add_to_stats(room_s);
