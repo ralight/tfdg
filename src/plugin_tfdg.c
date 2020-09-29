@@ -164,6 +164,7 @@ static cJSON *room_dice_totals(struct tfdg_room *room_s);
 void room_set_current_count(struct tfdg_room *room_s, int count);
 void room_set_host(struct tfdg_room *room_s, struct tfdg_player *host);
 static void report_results_to_losers(struct tfdg_room *room_s);
+static void report_summary_results(struct tfdg_room *room_s, const char *topic_suffix);
 static cJSON *json_delete_game(cJSON *j_game);
 static void tfdg_handle_player_lost(struct tfdg_room *room_s, struct tfdg_player *player_s);
 void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state);
@@ -2115,6 +2116,7 @@ static void send_results(struct tfdg_room *room_s, const char *topic_suffix)
 static void report_results_to_losers(struct tfdg_room *room_s)
 {
 	send_results(room_s, "loser-results");
+	report_summary_results(room_s, "loser-summary-results");
 }
 
 
@@ -2509,7 +2511,7 @@ static cJSON *json_create_dudo_candidates_object(struct tfdg_room *room_s)
 }
 
 
-static void report_summary_results(struct tfdg_room *room_s)
+static void report_summary_results(struct tfdg_room *room_s, const char *topic_suffix)
 {
 	cJSON *tree, *array, *jtmp;
 	struct tfdg_player *p;
@@ -2542,7 +2544,7 @@ static void report_summary_results(struct tfdg_room *room_s)
 		cJSON_AddItemToArray(array, jtmp);
 	}
 
-	easy_publish(room_s, "summary-results", tree);
+	easy_publish(room_s, topic_suffix, tree);
 	cJSON_Delete(tree);
 }
 
@@ -2579,7 +2581,7 @@ void tfdg_handle_call_dudo(struct mosquitto *client, struct tfdg_room *room_s, c
 	}
 
 	report_player_results(room_s);
-	report_summary_results(room_s);
+	report_summary_results(room_s, "summary-results");
 	room_set_state(room_s, tgs_awaiting_loser);
 }
 
@@ -2615,7 +2617,7 @@ void tfdg_handle_call_calza(struct mosquitto *client, struct tfdg_room *room_s, 
 	easy_publish_player(room_s, "calza-candidate", player_s);
 
 	report_player_results(room_s);
-	report_summary_results(room_s);
+	report_summary_results(room_s, "summary-results");
 	room_set_state(room_s, tgs_awaiting_loser);
 }
 
@@ -3161,7 +3163,7 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 				free(player);
 				return MOSQ_ERR_SUCCESS;
 			}
-		}else if(strcmp(cmd, "loser-results") == 0){
+		}else if(strcmp(cmd, "loser-results") == 0 || strcmp(cmd, "loser-summary-results") == 0){
 			client_id = mosquitto_client_id(client);
 			DL_FOREACH(room_s->lost_players, player_s){
 				if(strcmp(player_s->client_id, client_id) == 0){
