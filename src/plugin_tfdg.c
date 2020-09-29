@@ -130,6 +130,23 @@ struct tfdg_room{
 };
 
 
+struct tfdg_stats{
+	int calza_success;
+	int calza_fail;
+	int dudo_success;
+	int dudo_fail;
+	int dice_count[21];
+	int thrown_dice_values[10];
+	int dice_values[10];
+	int players[101];
+	int durations[2001];
+	int duration_counts[2001];
+	int game_count;
+	int max_players;
+	int max_duration;
+};
+
+
 static cJSON *j_full_state = NULL;
 static cJSON *j_stats_games = NULL;
 static cJSON *j_all_games = NULL;
@@ -153,7 +170,9 @@ void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state
 void room_pre_roll_init(struct tfdg_room *room_s);
 void publish_int_option(struct tfdg_room *room_s, const char *option, int value);
 cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s);
+void load_stats(void);
 
+static struct tfdg_stats stats;
 
 static int json_get_long(cJSON *json, const char *name, long *value)
 {
@@ -1119,6 +1138,7 @@ static void load_full_state(void)
 				statistics = cJSON_GetObjectItemCaseSensitive(j_full_state, "statistics");
 				if(statistics){
 					j_stats_games = cJSON_GetObjectItemCaseSensitive(statistics, "games");
+					load_stats();
 				}
 
 				load_game_state();
@@ -1154,6 +1174,8 @@ int mosquitto_auth_plugin_init(void **user_data, struct mosquitto_opt *auth_opts
 	room_expiry_time = 7200;
 	state_file = NULL;
 
+	memset(&stats, 0, sizeof(stats));
+
 	for(i=0; i<auth_opt_count; i++){
 		if(!strcmp(auth_opts[i].key, "room-expiry-time")){
 			room_expiry_time = atoi(auth_opts[i].value);
@@ -1178,8 +1200,263 @@ int mosquitto_auth_plugin_cleanup(void *user_data, struct mosquitto_opt *auth_op
 	return MOSQ_ERR_SUCCESS;
 }
 
+
+void load_stats(void)
+{
+	cJSON *jtmp, *j_result, *j_array;
+	int players;
+	int max_dice_count;
+	int i;
+
+	cJSON_ArrayForEach(j_result, j_stats_games){
+		jtmp = cJSON_GetObjectItem(j_result, "duration");
+		if(jtmp == NULL) continue;
+		if(jtmp->valuedouble < 100) continue;
+
+		jtmp = cJSON_GetObjectItem(j_result, "result");
+		if(jtmp == NULL) continue;
+		if(cJSON_IsString(jtmp) == false || strcmp(jtmp->valuestring, "game-over")) continue;
+
+		jtmp = cJSON_GetObjectItem(j_result, "calza-success");
+		if(jtmp && cJSON_IsNumber(jtmp)){
+			stats.calza_success += jtmp->valuedouble;
+		}
+
+		jtmp = cJSON_GetObjectItem(j_result, "calza-fail");
+		if(jtmp && cJSON_IsNumber(jtmp)){
+			stats.calza_fail += jtmp->valuedouble;
+		}
+
+		jtmp = cJSON_GetObjectItem(j_result, "dudo-success");
+		if(jtmp && cJSON_IsNumber(jtmp)){
+			stats.dudo_success += jtmp->valuedouble;
+		}
+
+		jtmp = cJSON_GetObjectItem(j_result, "dudo-fail");
+		if(jtmp && cJSON_IsNumber(jtmp)){
+			stats.dudo_fail += jtmp->valuedouble;
+		}
+
+		jtmp = cJSON_GetObjectItem(j_result, "max-dice");
+		if(jtmp && cJSON_IsNumber(jtmp)
+				&& jtmp->valuedouble >= 3 && jtmp->valuedouble <= 20){
+
+			stats.dice_count[(int)jtmp->valuedouble]++;
+			max_dice_count = jtmp->valuedouble;
+		}else{
+			stats.dice_count[5]++;
+			max_dice_count = 5;
+		}
+
+		jtmp = cJSON_GetObjectItem(j_result, "max-dice-value");
+		if(jtmp && cJSON_IsNumber(jtmp)
+				&& jtmp->valuedouble >= 3 && jtmp->valuedouble <= 9){
+
+			stats.dice_values[(int)jtmp->valuedouble]++;
+		}else{
+			stats.dice_values[6]++;
+		}
+
+		jtmp = cJSON_GetObjectItem(j_result, "players");
+		if(jtmp && cJSON_IsNumber(jtmp)
+				&& jtmp->valuedouble > 1 && jtmp->valuedouble < 100){
+
+			if(jtmp->valuedouble > stats.max_players){
+				stats.max_players = jtmp->valuedouble;
+			}
+			stats.players[(int)jtmp->valuedouble]++;
+			players = jtmp->valuedouble;
+
+			jtmp = cJSON_GetObjectItem(j_result, "duration");
+			stats.durations[players*max_dice_count] += jtmp->valuedouble;
+			stats.duration_counts[players*max_dice_count]++;
+			if(players*max_dice_count > stats.max_duration){
+				stats.max_duration = players*max_dice_count;
+			}
+		}
+
+		j_array = cJSON_GetObjectItem(j_result, "dice-totals");
+		if(j_array && cJSON_IsArray(j_array)){
+
+			i = 0;
+			cJSON_ArrayForEach(jtmp, j_array){
+				stats.thrown_dice_values[i] += jtmp->valuedouble;
+				i++;
+			}
+		}
+	}
+}
+
+
+void publish_stats(void)
+{
+	cJSON *tree, *jtmp, *j_array;
+	char *json_str;
+	int i;
+	double success, fail, total, count;
+
+	tree = cJSON_CreateObject();
+	if(tree == NULL) return;
+
+	/* Calza */
+	total = stats.calza_success + stats.calza_fail;
+	success = 100.0*(double)stats.calza_success / total;
+	fail = 100.0*(double)stats.calza_fail / total;
+
+	jtmp = cJSON_CreateNumber(success);
+	if(jtmp == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "calza-success", jtmp);
+
+	jtmp = cJSON_CreateNumber(fail);
+	if(jtmp == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "calza-fail", jtmp);
+
+	/* Dudo */
+	total = stats.dudo_success + stats.dudo_fail;
+	success = 100.0*(double)stats.dudo_success / total;
+	fail = 100.0*(double)stats.dudo_fail / total;
+
+	jtmp = cJSON_CreateNumber(success);
+	if(jtmp == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "dudo-success", jtmp);
+
+	jtmp = cJSON_CreateNumber(fail);
+	if(jtmp == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "dudo-fail", jtmp);
+
+	/* Player count */
+	j_array = cJSON_CreateArray();
+	if(j_array == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "players", j_array);
+
+	total = 0.0;
+	for(i=2; i<=stats.max_players; i++){
+		total += stats.players[i];
+	}
+
+	for(i=2; i<=stats.max_players; i++){
+		count = 100.0*(double)stats.players[i] / total;
+		jtmp = cJSON_CreateNumber(count);
+		if(jtmp == NULL){
+			cJSON_Delete(tree);
+			return;
+		}
+		cJSON_AddItemToArray(j_array, jtmp);
+	}
+
+	/* Durations */
+	j_array = cJSON_CreateArray();
+	if(j_array == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "durations", j_array);
+	for(i=0; i<=stats.max_duration; i++){
+		if(stats.duration_counts[i] > 0){
+			jtmp = cJSON_CreateNumber((double)stats.durations[i] / (double)stats.duration_counts[i]);
+		}else{
+			jtmp = cJSON_CreateNumber(0);
+		}
+		if(jtmp == NULL){
+			cJSON_Delete(tree);
+			return;
+		}
+		cJSON_AddItemToArray(j_array, jtmp);
+	}
+
+	/* Dice count */
+	j_array = cJSON_CreateArray();
+	if(j_array == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "dice-count", j_array);
+
+	total = 0.0;
+	for(i=0; i<=20; i++){
+		total += stats.dice_count[i];
+	}
+	for(i=0; i<=20; i++){
+		count = 100.0 * (double)stats.dice_count[i] / total;
+		jtmp = cJSON_CreateNumber(count);
+		if(jtmp == NULL){
+			cJSON_Delete(tree);
+			return;
+		}
+		cJSON_AddItemToArray(j_array, jtmp);
+	}
+
+	/* Dice values */
+	j_array = cJSON_CreateArray();
+	if(j_array == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "dice-values", j_array);
+
+	total = 0.0;
+	for(i=0; i<=9; i++){
+		total += stats.dice_values[i];
+	}
+	for(i=0; i<=9; i++){
+		count = 100.0 * (double)stats.dice_values[i] / total;
+		jtmp = cJSON_CreateNumber(count);
+		if(jtmp == NULL){
+			cJSON_Delete(tree);
+			return;
+		}
+		cJSON_AddItemToArray(j_array, jtmp);
+	}
+
+	/* Thrown dice values */
+	j_array = cJSON_CreateArray();
+	if(j_array == NULL){
+		cJSON_Delete(tree);
+		return;
+	}
+	cJSON_AddItemToObject(tree, "thrown-dice-values", j_array);
+
+	total = 0.0;
+	for(i=0; i<=9; i++){
+		total += stats.thrown_dice_values[i];
+	}
+	for(i=0; i<=9; i++){
+		count = 100.0 * (double)stats.thrown_dice_values[i] / total;
+		jtmp = cJSON_CreateNumber(count);
+		if(jtmp == NULL){
+			cJSON_Delete(tree);
+			return;
+		}
+		cJSON_AddItemToArray(j_array, jtmp);
+	}
+
+	tree->precision = 1;
+	json_str = cJSON_PrintUnformatted(tree);
+	cJSON_Delete(tree);
+	if(json_str == NULL) return;
+
+	mosquitto_broker_publish(NULL, "tfdg/stats", strlen(json_str), json_str, 1, 1, NULL);
+}
+
+
 int mosquitto_auth_security_init(void *user_data, struct mosquitto_opt *auth_opts, int auth_opt_count, bool reload)
 {
+	publish_stats();
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -2357,6 +2634,36 @@ static cJSON *room_dice_totals(struct tfdg_room *room_s)
 }
 
 
+static void room_add_to_stats(struct tfdg_room *room_s)
+{
+	int i;
+
+	if(room_s->player_count > 1 && room_s->player_count < 100){
+		stats.players[room_s->player_count]++;
+		if(room_s->player_count > stats.max_players){
+			stats.max_players = room_s->player_count;
+		}
+		stats.duration_counts[room_s->player_count]++;
+		stats.durations[room_s->player_count] += time(NULL)-room_s->start_time;
+	}
+	stats.calza_success += room_s->calza_success;
+	stats.calza_fail += room_s->calza_fail;
+	stats.dudo_success += room_s->dudo_success;
+	stats.dudo_fail += room_s->dudo_fail;
+
+	if(room_s->options.max_dice >= 3 && room_s->options.max_dice <= 20){
+		stats.dice_count[room_s->options.max_dice]++;
+	}
+	if(room_s->options.max_dice_value >= 3 && room_s->options.max_dice_value <= 9){
+		stats.dice_values[room_s->options.max_dice_value]++;
+	}
+	for(i=0; i<10; i++){
+		stats.thrown_dice_values[i] += room_s->totals[i];
+	}
+	publish_stats();
+}
+
+
 static void tfdg_handle_winner(struct tfdg_room *room_s)
 {
 	cJSON *tree, *array, *j_player;
@@ -2370,6 +2677,7 @@ static void tfdg_handle_winner(struct tfdg_room *room_s)
 	easy_publish(room_s, "winner", tree);
 	cJSON_Delete(tree);
 
+	room_add_to_stats(room_s);
 	room_set_state(room_s, tgs_game_over);
 	easy_publish(room_s, "room-closing", NULL);
 }
@@ -2783,10 +3091,16 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 
 	/* Subscription access check */
 	if(access == MOSQ_ACL_SUBSCRIBE){
-		if(strcmp(msg->topic, "tfdg/#") == 0){
+		if(strcmp(msg->topic, "tfdg/#") == 0
+				|| strcmp(msg->topic, "tfdg/stats") == 0){
+
 			return MOSQ_ERR_SUCCESS;
 		}else{
 			return MOSQ_ERR_ACL_DENIED;
+		}
+	}else if(access == MOSQ_ACL_READ){
+		if(strcmp(msg->topic, "tfdg/stats") == 0){
+			return MOSQ_ERR_SUCCESS;
 		}
 	}
 

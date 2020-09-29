@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<title>TFDG</title>
+		<link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
+		<link rel="icon" href="img/favicon.png" sizes="16x16" id="icon16">
+		<link rel="icon" href="img/favicon-32.png" sizes="32x32" id="icon32">
+		<link rel="icon" href="img/favicon-152.png" sizes="152x152">
+		<link rel="icon" href="img/favicon-167.png" sizes="167x167">
+		<link rel="icon" href="img/favicon-180.png" sizes="180x180">
+		<link rel="icon" href="img/favicon-192.png" sizes="192x192">
+		<link rel="icon" href="img/favicon-196.png" sizes="196x196" id="icon196">
+		<script src="js/jquery-3.5.1.min.js"></script>
+		<script src="js/bootstrap.bundle.min.js"></script>
+		<script src="js/paho-mqtt.js"></script>
+		<script src="js/Chart.bundle.min.js"></script>
+	</head>
+	<body>
+
+	<script>
+
+var mqtt = null;
+var playerChart = null;
+var calzaChart = null;
+var dudoChart = null;
+var diceCountChart = null;
+var colours = [
+	'rgb(255, 99, 132)',
+	'rgb(255, 159, 64)',
+	'rgb(255, 205, 86)',
+	'rgb(75, 192, 192)',
+	'rgb(54, 162, 235)',
+	'rgb(153, 102, 255)',
+	'rgb(201, 203, 207)',
+	'rgb(255, 99, 132)',
+	'rgb(255, 159, 64)',
+	'rgb(255, 205, 86)',
+	'rgb(75, 192, 192)',
+	'rgb(54, 162, 235)',
+	'rgb(153, 102, 255)',
+	'rgb(201, 203, 207)',
+	'rgb(255, 99, 132)',
+	'rgb(255, 159, 64)',
+	'rgb(255, 205, 86)',
+	'rgb(75, 192, 192)',
+	'rgb(54, 162, 235)',
+	'rgb(153, 102, 255)',
+	'rgb(201, 203, 207)'
+];
+
+function handle_stats(data)
+{
+	console.log(data);
+	players = data['players'];
+	labels = [];
+	dataset = [];
+
+	for(var i=0; i<players.length; i++){
+		if(players[i] > 0){
+			labels.push(i+2);
+			dataset.push(players[i]);
+		}
+	}
+	var ctx = document.getElementById('playerChart').getContext('2d');
+	playerChart = new Chart(ctx, {
+		type: 'bar',
+		data: {
+			labels: labels,
+			datasets: [{
+				data:dataset,
+				backgroundColor: colours
+			}]
+		},
+		options: {
+			legend: {
+				display: false
+			},
+			scales: {
+				xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Players"
+					}
+				}],
+				yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Percentage of total"
+					}
+				}]
+			}
+		}
+	});
+
+
+	labels = ["Success", "Fail"];
+	dataset = [data['calza-success'], data['calza-fail']];
+	var ctx = document.getElementById('calzaChart').getContext('2d');
+	calzaChart = new Chart(ctx, {
+		type: 'doughnut',
+		data: {
+			labels: labels,
+			datasets: [{
+				data:dataset,
+				backgroundColor: colours
+			}]
+		},
+		/*
+		options: {
+			legend: {
+				display: false
+			},
+			scales: {
+				yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Percentage of total"
+					}
+				}]
+			}
+		}
+		*/
+	});
+
+	labels = ["Success", "Fail"];
+	dataset = [data['dudo-success'], data['dudo-fail']];
+	var ctx = document.getElementById('dudoChart').getContext('2d');
+	dudoChart = new Chart(ctx, {
+		type: 'doughnut',
+		data: {
+			labels: labels,
+			datasets: [{
+				data:dataset,
+				backgroundColor: colours
+			}]
+		},
+		/*
+		options: {
+			legend: {
+				display: false
+			},
+			scales: {
+				yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Percentage of total"
+					}
+				}]
+			}
+		}
+		*/
+	});
+
+
+
+	labels = [];
+	dataset = [];
+	dice_count = data['dice-count'];
+	for(var i=0; i<dice_count.length; i++){
+		if(dice_count[i] > 0){
+			labels.push(i);
+			dataset.push(dice_count[i]);
+		}
+	}
+	var ctx = document.getElementById('diceCountChart').getContext('2d');
+	diceCountChart = new Chart(ctx, {
+		type: 'bar',
+		data: {
+			labels: labels,
+			datasets: [{
+				data:dataset,
+				backgroundColor: colours
+			}]
+		},
+		options: {
+			legend: {
+				display: false
+			},
+			scales: {
+				yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Percentage of total"
+					}
+				}]
+			}
+		}
+	});
+
+	labels = [];
+	dataset = [];
+	dice_values = data['dice-values'];
+	for(var i=0; i<dice_count.length; i++){
+		if(dice_values[i] > 0){
+			labels.push(i);
+			dataset.push(dice_values[i]);
+		}
+	}
+	var ctx = document.getElementById('diceValuesChart').getContext('2d');
+	diceValuesChart = new Chart(ctx, {
+		type: 'bar',
+		data: {
+			labels: labels,
+			datasets: [{
+				data:dataset,
+				backgroundColor: colours
+			}]
+		},
+		options: {
+			legend: {
+				display: false
+			},
+			scales: {
+				yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Percentage of total"
+					}
+				}]
+			}
+		}
+	});
+
+
+	labels = [];
+	dataset = [];
+	durations = data['durations'];
+	for(var i=0; i<durations.length; i++){
+		if(durations[i] > 0){
+			labels.push(i);
+			dataset.push(durations[i]/60.0);
+		}
+	}
+	var ctx = document.getElementById('durationChart').getContext('2d');
+	durationChart = new Chart(ctx, {
+		type: 'bar',
+		options: {
+			legend: {
+				display: false
+			},
+			scales: {
+				xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Total starting dice"
+					}
+				}],
+				yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Minutes"
+					}
+				}]
+			}
+		},
+		data: {
+			labels: labels,
+			datasets: [{
+				data:dataset,
+				backgroundColor: colours
+			}]
+		},
+	});
+
+	labels = [];
+	dataset = [];
+	thrown_dice = data['thrown-dice-values'];
+	for(var i=0; i<thrown_dice.length; i++){
+		if(thrown_dice[i] > 0){
+			labels.push(i+1);
+			dataset.push(thrown_dice[i]);
+		}
+	}
+	var ctx = document.getElementById('thrownDiceChart').getContext('2d');
+	thrownDiceChart = new Chart(ctx, {
+		type: 'bar',
+		data: {
+			labels: labels,
+			datasets: [{
+				data:dataset,
+				backgroundColor: colours
+			}]
+		},
+		options: {
+			legend: {
+				display: false
+			},
+			scales: {
+				yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: "Percentage of total"
+					}
+				}]
+			}
+		}
+	});
+
+}
+
+function startMQTT(){
+	var clientId = "";
+	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	for (var i = 0; i < 20; i++){
+		clientId += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+
+	mqtt = new Paho.Client("wss://tfdg.ral.me/mqtt", clientId);
+	mqtt.connect({
+		onSuccess: function (){
+			console.log("Connected to MQTT");
+			mqtt.subscribe("tfdg/stats");
+		}, cleanSession:true, useSSL:true, keepAliveInterval: 30, reconnect: true
+	});
+	mqtt.onMessageArrived = function(message){
+		console.log(message.destinationName);
+		if(message.destinationName != "tfdg/stats"){
+			return;
+		}
+		var data = null;
+		if(message.payloadString.length > 0){
+			data = JSON.parse(message.payloadString);
+			handle_stats(data);
+		}
+	}
+}
+
+$(document).ready(function(){
+	startMQTT();
+});
+	</script>
+	<div class="container" id="intro">
+		<div class="row justify-content-center">
+			<div class="col">
+				<h1 class="display-2 mb-3">Fibbing Dice Stats</h1>
+			</div>
+		</div>
+			
+		<div class="row justify-content-center">
+			<div class="col-6">
+				<h2>Players per game</h2>
+				<canvas id="playerChart" ></canvas>
+			</div>
+			<div class="col-6">
+				<h2>Average duration</h2>
+				<canvas id="durationChart" ></canvas>
+			</div>
+		</div>
+		<div class="row justify-content-center">
+			<div class="col-6">
+				<h2>Starting dice count</h2>
+				<canvas id="diceCountChart" ></canvas>
+			</div>
+			<div class="col-6">
+				<h2>Maximum dice value</h2>
+				<canvas id="diceValuesChart" ></canvas>
+			</div>
+		</div>
+		<div class="row justify-content-center">
+			<div class="col-6">
+				<h2>Calza calls</h2>
+				<canvas id="calzaChart" ></canvas>
+			</div>
+			<div class="col-6">
+				<h2>Dudo calls</h2>
+				<canvas id="dudoChart" ></canvas>
+			</div>
+		</div>
+		<div class="row justify-content-center">
+			<div class="col-6">
+				<h2>Total thrown dice</h2>
+				<canvas id="thrownDiceChart" ></canvas>
+			</div>
+		</div>
+
+	</div>
+	</body>
+</html>
+
+
