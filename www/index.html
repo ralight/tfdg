@@ -207,7 +207,6 @@ function setLobby(data){
 
 function play_sound(snd)
 {
-	console.log(snd);
 	if(options['sounds-enabled']){
 		sounds[snd].src = "sound/"+snd+".mp3";
 		sounds[snd].play();
@@ -350,7 +349,7 @@ function newRound(data){
 	game_playing = true;
 	$("#t-o-form").prop("disabled", true);
 	$("#prefctrl").collapse('hide');
-	console.log("new round");
+	console.log("New round");
 	palifico_round = data['palifico-round'];
 	if(palifico_round){
 		$("#palifico-banner").removeClass("d-none");
@@ -666,7 +665,6 @@ function onConnectionLost(responseObject) {
 }
 
 function handleState(data){
-	console.log(data);
 	setLobby(data);
 
 	game_playing = true;
@@ -765,7 +763,6 @@ function handleUndoWinner(data){
 
 function handleLoserResults(data)
 {
-	console.log(data);
 	player_results = data;
 	showPlayerDiceQuick();
 	setStarter(starter);
@@ -817,7 +814,6 @@ function handleHost(data){
 }
 
 function handleSetOption(data){
-	console.log(data);
 	if("allow-calza" in data){
 		options['allow-calza'] = data['allow-calza'];
 		$("#t-o-allow-calza").prop("checked", options['allow-calza']);
@@ -888,6 +884,7 @@ function startMQTT(){
 		let data = null;
 		if(message.payloadString.length > 0){
 			data = JSON.parse(message.payloadString);
+			console.log(data);
 		}
 
 		if(cmd == "summary-results"){
@@ -898,13 +895,11 @@ function startMQTT(){
 			have_state = true;
 		}else if(cmd == "state"){
 			if(have_state == false){
-				console.log(message.payloadString);
 				handleState(data);
 				have_state = true;
 			}
 		}else if(cmd == "player-results"){
 			player_results = data;
-			console.log(player_results);
 			setTimeout(showPlayerDice, options['results-timeout-value']);
 		}else if(cmd == "pre-roll-init"){
 			preRollInit(data);
@@ -919,7 +914,6 @@ function startMQTT(){
 		}else if(cmd == "calza-candidate"){
 			setCalza(data);
 		}else if(cmd == "dice/"+myuuid){
-			console.log("Received my dice: "+message.payloadString);
 			showMyDice(data);
 			if(data.length > 0){
 				if(data.length < 6){
