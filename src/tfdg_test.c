@@ -61,47 +61,23 @@ char player1_payload[1000];
 char player2_payload[1000];
 char player3_payload[1000];
 int publ = 0;
+int random_count = 0;
 
 struct mosquitto client1, client2, client3;
 
-void add_expected_publish(const char *topic_cmd, const char *payload, bool random)
+void check_expected_publish(const char *topic, int payloadlen, const char *payload);
+
+/* ======================================================================/
+ *
+ * Replacement functions
+ *
+ * ====================================================================== */
+
+int RAND_bytes(unsigned char bytes, int count)
 {
-	struct expected_publish *ep;
-
-	ep = malloc(sizeof(struct expected_publish));
-	snprintf(ep->topic, sizeof(ep->topic), "tfdg/%s/%s", room_uuid, topic_cmd);
-	ep->payload = strdup(payload);
-	ep->random = random;
-	DL_APPEND(expected_publishes, ep);
+	random_count += count;
+	return count;
 }
-
-
-void check_expected_publish(const char *topic, int payloadlen, const char *payload)
-{
-	struct expected_publish *ep;
-
-	CU_ASSERT_PTR_NOT_NULL(expected_publishes);
-	if(expected_publishes == NULL){
-		printf("%s || %s\n", topic, payload);
-		return;
-	}
-
-	ep = expected_publishes;
-	DL_DELETE(expected_publishes, ep);
-	CU_ASSERT_STRING_EQUAL(topic, ep->topic);
-	if(strcmp(topic, ep->topic)){
-		printf("%s || %s\n", topic, ep->topic);
-	}
-	if(ep->random == false){
-		CU_ASSERT_NSTRING_EQUAL(payload, ep->payload, payloadlen);
-		if(strncmp(payload, ep->payload, payloadlen)){
-			printf("%s\n%s\n", payload, ep->payload);
-		}
-	}
-	free(ep->payload);
-	free(ep);
-}
-
 
 const char *mosquitto_client_id(const struct mosquitto *client)
 {
@@ -159,6 +135,54 @@ int mosquitto_broker_publish(
 	return rc;
 }
 
+
+
+
+/* ======================================================================/
+ *
+ * Helper functions
+ *
+ * ====================================================================== */
+
+void add_expected_publish(const char *topic_cmd, const char *payload, bool random)
+{
+	struct expected_publish *ep;
+
+	ep = malloc(sizeof(struct expected_publish));
+	snprintf(ep->topic, sizeof(ep->topic), "tfdg/%s/%s", room_uuid, topic_cmd);
+	ep->payload = strdup(payload);
+	ep->random = random;
+	DL_APPEND(expected_publishes, ep);
+}
+
+
+void check_expected_publish(const char *topic, int payloadlen, const char *payload)
+{
+	struct expected_publish *ep;
+
+	CU_ASSERT_PTR_NOT_NULL(expected_publishes);
+	if(expected_publishes == NULL){
+		printf("%s || %s\n", topic, payload);
+		return;
+	}
+
+	ep = expected_publishes;
+	DL_DELETE(expected_publishes, ep);
+	CU_ASSERT_STRING_EQUAL(topic, ep->topic);
+	if(strcmp(topic, ep->topic)){
+		printf("%s || %s\n", topic, ep->topic);
+	}
+	if(ep->random == false){
+		CU_ASSERT_NSTRING_EQUAL(payload, ep->payload, payloadlen);
+		if(strncmp(payload, ep->payload, payloadlen)){
+			printf("%s\n%s\n", payload, ep->payload);
+		}
+	}
+	free(ep->payload);
+	free(ep);
+}
+
+
 void easy_acl_check(const char *room, struct mosquitto *client, const char *topic_cmd, const char *payload, int mode)
 {
 	int rc;
@@ -175,6 +199,12 @@ void easy_acl_check(const char *room, struct mosquitto *client, const char *topi
 	rc = mosquitto_auth_acl_check(NULL, mode, client, &msg);
 	CU_ASSERT_EQUAL(rc, MOSQ_ERR_ACL_DENIED);
 }
+
+/* ======================================================================/
+ *
+ * Tests
+ *
+ * ====================================================================== */
 
 void TEST_non_tfdg_topic(void)
 {
@@ -1098,5 +1128,6 @@ int main(int argc, char *argv[])
     CU_cleanup_registry();
 
 	printf("pub count: %d\n", publ);
+	printf("random bytes: %d\n", random_count);
 	return 0;
 }
