@@ -416,7 +416,7 @@ static void cleanup_room(struct tfdg_room *room_s, const char *reason)
 		if(p->client_id){
 			HASH_FIND(hh_client_id, room_s->player_by_client_id, p->client_id, strlen(p->client_id), tmp3);
 			if(tmp3){
-				HASH_DELETE(hh_client_id, room_s->player_by_client_id, p);
+				HASH_DELETE(hh_client_id, room_s->player_by_client_id, tmp3);
 			}
 		}
 		cleanup_player(p);
@@ -427,7 +427,7 @@ static void cleanup_room(struct tfdg_room *room_s, const char *reason)
 		if(p->client_id){
 			HASH_FIND(hh_client_id, room_s->player_by_client_id, p->client_id, strlen(p->client_id), tmp3);
 			if(tmp3){
-				HASH_DELETE(hh_client_id, room_s->player_by_client_id, p);
+				HASH_DELETE(hh_client_id, room_s->player_by_client_id, tmp3);
 			}
 		}
 		cleanup_player(p);
