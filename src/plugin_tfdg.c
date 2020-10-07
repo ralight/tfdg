@@ -35,6 +35,7 @@ Contributors:
 #define ANSI_WHITE "\e[0;37m"
 #define ANSI_RESET "\e[0m"
 
+#define GAME_NAME "TFDG  "
 #define MAX_DICE 20
 #define MAX_DICE_VALUE 9
 #define MAX_LOG_LEN 15
@@ -391,7 +392,7 @@ static void cleanup_room(struct tfdg_room *room_s, const char *reason)
 	struct tfdg_player *p, *tmp1, *tmp2, *tmp3;
 
 	add_room_to_stats(room_s, reason);
-	printf(ANSI_RED "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : " ANSI_YELLOW "%s" ANSI_RESET "\n", room_s->uuid, MAX_LOG_LEN, "cleanup", reason);
+	printf(ANSI_YELLOW GAME_NAME ANSI_RED "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : " ANSI_YELLOW "%s" ANSI_RESET "\n", room_s->uuid, MAX_LOG_LEN, "cleanup", reason);
 	CDL_FOREACH_SAFE(room_s->players, p, tmp1, tmp2){
 		CDL_DELETE(room_s->players, p);
 		HASH_DELETE(hh_uuid, room_s->player_by_uuid, p);
@@ -715,7 +716,7 @@ void tfdg_send_current_state(struct tfdg_room *room_s, struct tfdg_player *playe
 	}
 	cJSON_AddItemToObject(tree, "players", players);
 
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "sending-state", player_s->uuid, player_s->name);
 
@@ -1720,7 +1721,7 @@ void room_set_host(struct tfdg_room *room_s, struct tfdg_player *host)
 	room_s->host = host;
 
 	if(host){
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 				room_s->uuid, MAX_LOG_LEN, "new-host", host->uuid, host->name);
 	}
@@ -1968,7 +1969,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 	}
 
 	if(room_s == NULL){
-		printf(ANSI_RED "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET "\n",
+		printf(ANSI_YELLOW GAME_NAME ANSI_RED "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET "\n",
 				room, MAX_LOG_LEN, "new-room");
 
 		room_s = room_create(room);
@@ -2007,14 +2008,14 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 			player_s->client_id = strdup(mosquitto_client_id(client));
 			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id,  strlen(player_s->client_id), player_s);
 		}
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 				room_s->uuid, MAX_LOG_LEN, "login", player_s->uuid, player_s->name);
 
 		tfdg_send_lobby_players(room_s);
 	}else{
 		if(player_s != NULL){
-			printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+			printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 					ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 					room_s->uuid, MAX_LOG_LEN, "re-login", player_s->uuid, player_s->name);
 
@@ -2055,7 +2056,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id,  strlen(player_s->client_id), player_s);
 			tfdg_send_current_state(room_s, player_s);
 
-			printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+			printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 					ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 					room_s->uuid, MAX_LOG_LEN, "spectator", player_s->uuid, player_s->name);
 		}
@@ -2118,7 +2119,7 @@ static void send_results(struct tfdg_room *room_s, const char *topic_suffix)
 {
 	cJSON *tree;
 
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : " ANSI_MAGENTA "round %d" ANSI_RESET "\n",
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : " ANSI_MAGENTA "round %d" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, topic_suffix, room_s->round);
 
 	tree = json_create_results_array(room_s);
@@ -2176,7 +2177,7 @@ void tfdg_handle_logout(struct mosquitto *client, struct tfdg_room *room_s, cons
 		room_delete_player(room_s, player_s);
 		room_set_player_count(room_s, room_s->player_count-1);
 
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 				room_s->uuid, MAX_LOG_LEN, "logout", player_s->uuid, player_s->name);
 
@@ -2246,7 +2247,7 @@ void tfdg_new_round(struct tfdg_room *room_s)
 			i++;
 		}
 
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%d (%d players)" ANSI_RESET "\n",
 				room_s->uuid, MAX_LOG_LEN, "new-round", room_s->round, room_s->current_count);
 
@@ -2276,7 +2277,7 @@ void tfdg_expire_rooms(void)
 	now = time(NULL);
 	HASH_ITER(hh, room_by_uuid, room_s, room_tmp){
 		if(now > room_s->last_event + room_expiry_time){
-			printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+			printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 					ANSI_MAGENTA "%d players" ANSI_RESET "\n",
 					room_s->uuid, MAX_LOG_LEN, "room-expiring", room_s->current_count);
 
@@ -2302,7 +2303,7 @@ void tfdg_handle_start_game(struct mosquitto *client, struct tfdg_room *room_s, 
 	if(player_s == NULL || player_s != room_s->host) return;
 
 	room_s->current_count = room_s->player_count;
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%d players" ANSI_RESET "(%d)\n",
 			room_s->uuid, MAX_LOG_LEN, "start-game", room_s->current_count, HASH_COUNT(room_by_uuid));
 
@@ -2361,7 +2362,7 @@ void send_dice(struct tfdg_room *room_s, struct tfdg_player *player_s)
 	if(json_str){
 		snprintf(topic, sizeof(topic), "tfdg/%s/dice/%s", room_s->uuid, player_s->uuid);
 		mosquitto_broker_publish(NULL, topic, strlen(json_str), json_str, 1, 0, NULL);
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "send-dice", player_s->uuid, player_s->name);
 	}
@@ -2596,7 +2597,7 @@ void tfdg_handle_call_dudo(struct mosquitto *client, struct tfdg_room *room_s, c
 
 	tree = json_create_dudo_candidates_object(room_s);
 	if(tree){
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "call-dudo", player_s->uuid, player_s->name);
 
@@ -2628,7 +2629,7 @@ void tfdg_handle_call_calza(struct mosquitto *client, struct tfdg_room *room_s, 
 	if(player_s->dice_count == room_s->options.max_dice){
 		return;
 	}
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "call-calza", player_s->uuid, player_s->name);
 
@@ -2731,7 +2732,7 @@ void tfdg_handle_kick_player(struct mosquitto *client, struct tfdg_room *room_s,
 	if(kicker_s && room_s->host == kicker_s &&
 			(room_s->state == tgs_lobby || room_s->state == tgs_playing_round || room_s->state == tgs_round_over || room_s->state == tgs_game_over)){
 
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 				room_s->uuid, MAX_LOG_LEN, "kick-player", player_s->uuid, player_s->name);
 
@@ -2758,7 +2759,7 @@ void tfdg_handle_leave_game(struct mosquitto *client, struct tfdg_room *room_s, 
 
 	if(room_s->state == tgs_playing_round || room_s->state == tgs_round_over || room_s->state == tgs_game_over){
 
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 				room_s->uuid, MAX_LOG_LEN, "leave-game", player_s->uuid, player_s->name);
 
@@ -2798,7 +2799,7 @@ void tfdg_handle_undo_loser(struct mosquitto *client, struct tfdg_room *room_s, 
 	if(room_s->round_loser != player_s){
 		return;
 	}
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "undo-loser", player_s->uuid, player_s->name);
 
@@ -2836,7 +2837,7 @@ void tfdg_handle_undo_winner(struct mosquitto *client, struct tfdg_room *room_s,
 	if(room_s->round_winner != player_s){
 		return;
 	}
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "undo-winner", player_s->uuid, player_s->name);
 
@@ -2848,7 +2849,7 @@ void tfdg_handle_undo_winner(struct mosquitto *client, struct tfdg_room *room_s,
 
 static void tfdg_handle_player_lost(struct tfdg_room *room_s, struct tfdg_player *player_s)
 {
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "game-lost", player_s->uuid, player_s->name);
 
@@ -2892,7 +2893,7 @@ void tfdg_handle_i_lost(struct mosquitto *client, struct tfdg_room *room_s, cons
 		tfdg_handle_player_lost(room_s, player_s);
 		tfdg_handle_winner(room_s);
 	}else{
-		printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 				room_s->uuid, MAX_LOG_LEN, "round-lost", player_s->uuid, player_s->name);
 
@@ -2933,7 +2934,7 @@ void tfdg_handle_i_won(struct mosquitto *client, struct tfdg_room *room_s, const
 	room_set_round_winner(room_s, player_s);
 	player_set_dice_count(player_s, player_s->dice_count+1);
 
-	printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+	printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "calza-won", player_s->uuid, player_s->name);
 
@@ -3023,7 +3024,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 				if(ival >= 3 && ival <= MAX_DICE){
 					room_set_option_int(room_s, &room_s->options.max_dice, "max-dice", ival);
 
-					printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+					printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 							ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
 							room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
 							"max-dice", ival);
@@ -3037,7 +3038,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 				if(ival >= 3 && ival <= MAX_DICE_VALUE){
 					room_set_option_int(room_s, &room_s->options.max_dice_value, "max-dice-value", ival);
 
-					printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+					printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 							ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
 							room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
 							"max-dice-value", ival);
@@ -3049,7 +3050,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 			if(cJSON_IsBool(j_value)){
 				room_set_option_bool(room_s, &room_s->options.random_max_dice_value, "random-max-dice-value", cJSON_IsTrue(j_value));
 
-				printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
 						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
 						"random-max-dice-value", cJSON_IsTrue(j_value));
@@ -3060,7 +3061,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 			if(cJSON_IsBool(j_value)){
 				room_set_option_bool(room_s, &room_s->options.allow_calza, "allow-calza", cJSON_IsTrue(j_value));
 
-				printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
 						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
 						"allow-calza", cJSON_IsTrue(j_value));
@@ -3071,7 +3072,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 			if(cJSON_IsBool(j_value)){
 				room_set_option_bool(room_s, &room_s->options.roll_dice_at_start, "roll-dice-at-start", cJSON_IsTrue(j_value));
 
-				printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
 						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
 						"roll-dice-at-start", cJSON_IsTrue(j_value));
@@ -3082,7 +3083,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 			if(cJSON_IsBool(j_value)){
 				room_set_option_bool(room_s, &room_s->options.show_results_table, "show-results-table", cJSON_IsTrue(j_value));
 
-				printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
 						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
 						"show-results-table", cJSON_IsTrue(j_value));
@@ -3093,7 +3094,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 			if(cJSON_IsBool(j_value)){
 				room_set_option_bool(room_s, &room_s->options.losers_see_dice, "losers-see-dice", cJSON_IsTrue(j_value));
 
-				printf(ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
 						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
 						"losers-see-dice", cJSON_IsTrue(j_value));
