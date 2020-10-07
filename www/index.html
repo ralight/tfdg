@@ -927,9 +927,13 @@ function startMQTT(){
 			console.log(data);
 		}
 
-		if(cmd == "summary-results" || cmd == "loser-summary-results"){
+		if(cmd == "summary-results"){
 			console.log("Received result summary");
 			summary_results = data;
+		}else if(cmd == "loser-summary-results"){
+			console.log("Received loser result summary");
+			summary_results = data;
+			showSummary("Dice");
 		}else if(cmd == "lobby-players"){
 			setLobby(data);
 			have_state = true;
