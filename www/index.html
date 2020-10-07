@@ -225,13 +225,15 @@ function addPlayerCard(data) {
 	let card = '<div class="card text-center float-left m-1" id="'+uuid+'">'+
 		'<div class="card-header" style="padding:0.5rem 1.25rem" onclick="kickPlayerConfirm(\''+name+'\',\''+uuid+'\');"><span>'+ishost+'</span>'+name+' ⇨</div>'+
 			'<div class="card-body" style="padding:0.5rem">';
+	card += '<div class="dice-row">';
 	for(let i=1; i<options['max-dice']+1; i++){
 		card += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
 		if(i%5 == 0){
-			card += "<br>";
+			card += "</div>";
+			card += '<div class="dice-row">';
 		}
 	}
-
+	card += "</div>";
 	card += '</div></div>';
 
 
@@ -243,12 +245,16 @@ function resetPlayerCardDice(){
 		let uuid = $(this).find("div")[0].id.substr(0, 36);
 		$(this).empty();
 		let card = "";
+
+		card += '<div class="dice-row">';
 		for(let i=1; i<options['max-dice']+1; i++){
 			card += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
 			if(i%5 == 0){
-				card += "<br>";
+				card += "</div>";
+				card += '<div class="dice-row">';
 			}
 		}
+		card += "</div>";
 		$(this).append(card);
 	});
 }
@@ -263,9 +269,9 @@ function clearCards(){
 }
 
 function setDiceUnknown(){
-	$("#gametable div div.card-body div").empty()
-	$("#gametable div div.card-body div").removeClass(dice_styles);
-	$("#gametable div div.card-body div").addClass("diceU");
+	$("#gametable div div.card-body div div").empty()
+	$("#gametable div div.card-body div div").removeClass(dice_styles);
+	$("#gametable div div.card-body div div").addClass("diceU");
 }
 
 function setDiceStar(){
@@ -738,7 +744,7 @@ function showNewGame(){
 }
 
 function handleUndoLoser(data){
-	$("#gametable div div.card-body div").empty()
+	$("#gametable div div.card-body div div").empty()
 	$("#b-loser").removeClass("d-none");
 	$("#b-undo-loser").addClass("d-none");
 	if(Array.isArray(data)){
@@ -751,7 +757,7 @@ function handleUndoLoser(data){
 
 function handleUndoWinner(data){
 	let uuid = data["uuid"];
-	$("#gametable div div.card-body div").empty()
+	$("#gametable div div.card-body div div").empty()
 
 	if(uuid == myuuid){
 		$("#b-winner").removeClass("d-none");
