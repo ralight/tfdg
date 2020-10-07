@@ -95,6 +95,7 @@ struct tfdg_room_options{
 	bool allow_calza;
 	bool losers_see_dice;
 	bool random_max_dice_value;
+	bool random_position;
 	bool roll_dice_at_start;
 	bool show_results_table;
 };
@@ -345,6 +346,11 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 	if(room_s->options.max_dice_value != 6){
 		jtmp = cJSON_CreateNumber(room_s->options.max_dice_value);
 		cJSON_AddItemToObject(game, "max-dice-value", jtmp);
+	}
+
+	if(room_s->options.random_position != false){
+		jtmp = cJSON_CreateBool(room_s->options.random_position);
+		cJSON_AddItemToObject(game, "random-position", jtmp);
 	}
 
 	if(room_s->options.random_max_dice_value != false){
@@ -641,6 +647,9 @@ static cJSON *json_create_options_obj(struct tfdg_room *room_s)
 
 	jtmp = cJSON_CreateNumber(room_s->options.max_dice_value);
 	cJSON_AddItemToObject(j_options, "max-dice-value", jtmp);
+
+	jtmp = cJSON_CreateBool(room_s->options.random_position);
+	cJSON_AddItemToObject(j_options, "random-position", jtmp);
 
 	jtmp = cJSON_CreateBool(room_s->options.show_results_table);
 	cJSON_AddItemToObject(j_options, "show-results-table", jtmp);
@@ -1060,7 +1069,10 @@ static void load_game_state(void)
 				|| json_get_int(j_options, "max-dice-value", &room_s->options.max_dice_value) != 0
 				|| json_get_bool(j_options, "allow-calza", &room_s->options.allow_calza) != 0
 				|| json_get_bool(j_options, "losers-see-dice", &room_s->options.losers_see_dice) != 0
-				|| json_get_bool(j_options, "show-results-table", &room_s->options.show_results_table) != 0){
+				|| json_get_bool(j_options, "random-max-dice-value", &room_s->options.random_max_dice_value) != 0
+				|| json_get_bool(j_options, "show-results-table", &room_s->options.show_results_table) != 0
+				|| json_get_bool(j_options, "random-position", &room_s->options.swap_direction) != 0
+				){
 
 			j_game = j_game->next;
 			cleanup_room(room_s, "config-load -1");
@@ -1849,6 +1861,7 @@ static struct tfdg_room *room_create(const char *room)
 	room_set_option_bool(room_s, &room_s->options.roll_dice_at_start, "roll-dice-at-start", true);
 	room_set_option_bool(room_s, &room_s->options.losers_see_dice, "losers-see-dice", true);
 	room_set_option_bool(room_s, &room_s->options.show_results_table, "show-results-table", true);
+	room_set_option_bool(room_s, &room_s->options.random_position, "random-position", false);
 
 	cJSON_AddItemToArray(j_all_games, room_s->json);
 
@@ -2228,6 +2241,10 @@ static void tfdg_new_round(struct tfdg_room *room_s)
 	room_set_dudo_caller(room_s, NULL);
 	room_set_round_loser(room_s, NULL);
 	room_set_round_winner(room_s, NULL);
+
+	if(room_s->options.random_position){
+		room_shuffle_players(room_s);
+	}
 
 	if(RAND_bytes(bytes, count) == 1){
 		if(room_s->round == 1 || room_s->options.random_max_dice_value == false){
@@ -3053,6 +3070,17 @@ static void tfdg_handle_set_option(struct mosquitto_evt_acl_check *ed, struct tf
 						"random-max-dice-value", cJSON_IsTrue(j_value));
 
 				publish_bool_option(room_s, "random-max-dice-value", cJSON_IsTrue(j_value));
+			}
+		}else if(strcmp(j_option->valuestring, "random-position") == 0){
+			if(cJSON_IsBool(j_value)){
+				room_set_option_bool(room_s, &room_s->options.random_position, "random-position", cJSON_IsTrue(j_value));
+
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
+						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
+						"random-position", cJSON_IsTrue(j_value));
+
+				publish_bool_option(room_s, "random-position", cJSON_IsTrue(j_value));
 			}
 		}else if(strcmp(j_option->valuestring, "allow-calza") == 0){
 			if(cJSON_IsBool(j_value)){

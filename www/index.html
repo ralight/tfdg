@@ -833,6 +833,9 @@ function handleSetOption(data){
 	if("random-max-dice-value" in data){
 		$("#t-o-random-max-dice-value").prop("checked", data['random-max-dice-value']);
 	}
+	if("random-position" in data){
+		$("#t-o-random-position").prop("checked", data['random-position']);
+	}
 	if("show-results-table" in data){
 		if(data['show-results-table']){
 			$("#summary-results").removeClass("d-none");
@@ -1270,6 +1273,10 @@ $(window).on("load", function(){
 								<div class="custom-control custom-switch text-left">
 									<input type="checkbox" class="custom-control-input" id="t-o-random-max-dice-value" onclick="setBoolOption('random-max-dice-value', this.checked);">
 									<label class="custom-control-label" for="t-o-random-max-dice-value">Random max dice value per round</label>
+								</div>
+								<div class="custom-control custom-switch text-left">
+									<input type="checkbox" class="custom-control-input" id="t-o-random-position" onclick="setBoolOption('random-position', this.checked);">
+									<label class="custom-control-label" for="t-o-random-position">Random player position per round</label>
 								</div>
 								<div class="form-group text-left mt-1">
 									Maximum dice count:
