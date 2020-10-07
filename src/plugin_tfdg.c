@@ -162,19 +162,19 @@ static cJSON *json_create_results_array(struct tfdg_room *room_s);
 static cJSON *json_create_dudo_candidates_object(struct tfdg_room *room_s);
 static cJSON *json_create_my_dice_array(struct tfdg_player *player_s);
 static void save_full_state(void);
-void room_append_player(struct tfdg_room *room_s, struct tfdg_player *player_s, bool onload);
+static void room_append_player(struct tfdg_room *room_s, struct tfdg_player *player_s, bool onload);
 static cJSON *room_dice_totals(struct tfdg_room *room_s);
-void room_set_current_count(struct tfdg_room *room_s, int count);
-void room_set_host(struct tfdg_room *room_s, struct tfdg_player *host);
+static void room_set_current_count(struct tfdg_room *room_s, int count);
+static void room_set_host(struct tfdg_room *room_s, struct tfdg_player *host);
 static void report_results_to_losers(struct tfdg_room *room_s);
 static void report_summary_results(struct tfdg_room *room_s, const char *topic_suffix);
 static cJSON *json_delete_game(cJSON *j_game);
 static void tfdg_handle_player_lost(struct tfdg_room *room_s, struct tfdg_player *player_s);
-void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state);
-void room_pre_roll_init(struct tfdg_room *room_s);
-void publish_int_option(struct tfdg_room *room_s, const char *option, int value);
-cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s);
-void load_stats(void);
+static void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state);
+static void room_pre_roll_init(struct tfdg_room *room_s);
+static void publish_int_option(struct tfdg_room *room_s, const char *option, int value);
+static cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s);
+static void load_stats(void);
 static int callback_acl_check(int event, void *event_data, void *userdata);
 
 static struct tfdg_stats stats;
@@ -1883,7 +1883,7 @@ static cJSON *player_create_json(void)
 }
 
 
-void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player_s, unsigned char *bytes, int max_dice_value)
+static void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player_s, unsigned char *bytes, int max_dice_value)
 {
 	int i;
 	cJSON *j_array;
@@ -1901,7 +1901,7 @@ void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player
 }
 
 
-void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state)
+static void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state)
 {
 	cJSON *jtmp;
 
@@ -1911,7 +1911,7 @@ void player_set_state(struct tfdg_player *player_s, enum tfdg_player_state state
 }
 
 
-void player_set_ex_palifico(struct tfdg_player *player_s)
+static void player_set_ex_palifico(struct tfdg_player *player_s)
 {
 	cJSON *jtmp;
 
@@ -1921,7 +1921,7 @@ void player_set_ex_palifico(struct tfdg_player *player_s)
 }
 
 
-void player_set_name(struct tfdg_player *player_s, char *name)
+static void player_set_name(struct tfdg_player *player_s, char *name)
 {
 	cJSON *jtmp;
 
@@ -1931,7 +1931,7 @@ void player_set_name(struct tfdg_player *player_s, char *name)
 }
 
 
-void player_set_dice_count(struct tfdg_player *player_s, int dice_count)
+static void player_set_dice_count(struct tfdg_player *player_s, int dice_count)
 {
 	cJSON *jtmp;
 
@@ -1941,7 +1941,7 @@ void player_set_dice_count(struct tfdg_player *player_s, int dice_count)
 }
 
 
-void player_set_uuid(struct tfdg_player *player_s, char *uuid)
+static void player_set_uuid(struct tfdg_player *player_s, char *uuid)
 {
 	cJSON *jtmp;
 
@@ -2129,7 +2129,7 @@ static void report_results_to_losers(struct tfdg_room *room_s)
 }
 
 
-void report_player_results(struct tfdg_room *room_s)
+static void report_player_results(struct tfdg_room *room_s)
 {
 	room_set_state(room_s, tgs_sending_results);
 
@@ -2197,7 +2197,7 @@ static void tfdg_handle_logout(struct mosquitto_evt_acl_check *ed, struct tfdg_r
 }
 
 
-void tfdg_new_round(struct tfdg_room *room_s)
+static void tfdg_new_round(struct tfdg_room *room_s)
 {
 	struct tfdg_player *p;
 	int i;
@@ -2263,7 +2263,7 @@ void tfdg_new_round(struct tfdg_room *room_s)
 
 
 /* Remove rooms that haven't seen any changes in two hours */
-void tfdg_expire_rooms(void)
+static void tfdg_expire_rooms(void)
 {
 	struct tfdg_room *room_s, *room_tmp;
 	time_t now;
@@ -2344,7 +2344,7 @@ static cJSON *json_create_my_dice_array(struct tfdg_player *player_s)
 }
 
 
-void send_dice(struct tfdg_room *room_s, struct tfdg_player *player_s)
+static void send_dice(struct tfdg_room *room_s, struct tfdg_player *player_s)
 {
 	cJSON *tree;
 	char *json_str;
@@ -2363,7 +2363,7 @@ void send_dice(struct tfdg_room *room_s, struct tfdg_player *player_s)
 }
 
 
-cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s)
+static cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s)
 {
 	cJSON *tree, *j_player, *jtmp;
 	struct tfdg_player *p;
@@ -2383,7 +2383,7 @@ cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s)
 }
 
 
-void room_pre_roll_init(struct tfdg_room *room_s)
+static void room_pre_roll_init(struct tfdg_room *room_s)
 {
 	struct tfdg_player *p;
 	unsigned char bytes[1000];
@@ -2412,7 +2412,7 @@ void room_pre_roll_init(struct tfdg_room *room_s)
 }
 
 
-void tfdg_handle_pre_roll_result(struct tfdg_room *room_s)
+static void tfdg_handle_pre_roll_result(struct tfdg_room *room_s)
 {
 	int i;
 	cJSON *tree = NULL, *j_player;
@@ -2459,7 +2459,7 @@ void tfdg_handle_pre_roll_result(struct tfdg_room *room_s)
 }
 
 
-void tfdg_handle_pre_roll_dice(struct tfdg_room *room_s, struct tfdg_player *player_s)
+static void tfdg_handle_pre_roll_dice(struct tfdg_room *room_s, struct tfdg_player *player_s)
 {
 	cJSON *tree, *jtmp;
 
@@ -2936,7 +2936,7 @@ static void tfdg_handle_i_won(struct mosquitto_evt_acl_check *ed, struct tfdg_ro
 	room_set_starter(room_s, player_s);
 }
 
-void publish_bool_option(struct tfdg_room *room_s, const char *option, bool value)
+static void publish_bool_option(struct tfdg_room *room_s, const char *option, bool value)
 {
 	cJSON *tree, *jtmp;
 
@@ -2948,7 +2948,7 @@ void publish_bool_option(struct tfdg_room *room_s, const char *option, bool valu
 	cJSON_Delete(tree);
 }
 
-void publish_int_option(struct tfdg_room *room_s, const char *option, int value)
+static void publish_int_option(struct tfdg_room *room_s, const char *option, int value)
 {
 	cJSON *tree, *jtmp;
 
