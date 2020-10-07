@@ -148,6 +148,8 @@ struct tfdg_stats{
 };
 
 
+static mosquitto_plugin_id_t *mosq_pid = NULL;
+
 static cJSON *j_full_state = NULL;
 static cJSON *j_stats_games = NULL;
 static cJSON *j_all_games = NULL;
@@ -173,6 +175,7 @@ void room_pre_roll_init(struct tfdg_room *room_s);
 void publish_int_option(struct tfdg_room *room_s, const char *option, int value);
 cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s);
 void load_stats(void);
+static int callback_acl_check(int event, void *event_data, void *userdata);
 
 static struct tfdg_stats stats;
 
@@ -491,17 +494,17 @@ int find_player_from_json(const char *json_str, size_t json_str_len, struct tfdg
 	}
 }
 
-static struct tfdg_player *find_player_check_id(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static struct tfdg_player *find_player_check_id(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 
 	/* Find the player structure described by '{"uuid":""}' if it is in this room */
-	if(room_s == NULL || find_player_from_json(msg->payload, msg->payloadlen, room_s, &player_s)){
+	if(room_s == NULL || find_player_from_json(ed->payload, ed->payloadlen, room_s, &player_s)){
 		return NULL;
 	}
 	/* Check that the client sending this message matches the client that is
 	 * attached to this player. */
-	if(strcmp(mosquitto_client_id(client), player_s->client_id)){
+	if(strcmp(mosquitto_client_id(ed->client), player_s->client_id)){
 		return NULL;
 	}
 	return player_s;
@@ -844,9 +847,9 @@ void tfdg_send_current_state(struct tfdg_room *room_s, struct tfdg_player *playe
 }
 
 
-int mosquitto_auth_plugin_version(void)
+int mosquitto_plugin_version(void)
 {
-	return MOSQ_AUTH_PLUGIN_VERSION;
+	return 5;
 }
 
 
@@ -1176,9 +1179,11 @@ static void load_full_state(void)
 }
 
 
-int mosquitto_auth_plugin_init(void **user_data, struct mosquitto_opt *auth_opts, int auth_opt_count)
+int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, struct mosquitto_opt *auth_opts, int auth_opt_count)
 {
 	int i;
+
+	mosq_pid = identifier;
 
 	j_full_state = NULL;
 	j_stats_games = NULL;
@@ -1201,17 +1206,18 @@ int mosquitto_auth_plugin_init(void **user_data, struct mosquitto_opt *auth_opts
 		state_file = strdup("tfdg-state.json");
 	}
 	load_full_state();
-	return MOSQ_ERR_SUCCESS;
+
+	return mosquitto_callback_register(mosq_pid, MOSQ_EVT_ACL_CHECK, callback_acl_check, NULL, NULL);
 }
 
-int mosquitto_auth_plugin_cleanup(void *user_data, struct mosquitto_opt *auth_opts, int auth_opt_count)
+int mosquitto_plugin_cleanup(void *user_data, struct mosquitto_opt *auth_opts, int auth_opt_count)
 {
 	save_full_state();
 	//cleanup_all();
 	cJSON_Delete(j_full_state);
 	j_full_state = NULL;
 	free(state_file);
-	return MOSQ_ERR_SUCCESS;
+	return mosquitto_callback_unregister(mosq_pid, MOSQ_EVT_ACL_CHECK, callback_acl_check, NULL);
 }
 
 
@@ -1465,18 +1471,6 @@ void publish_stats(void)
 	if(json_str == NULL) return;
 
 	mosquitto_broker_publish(NULL, "tfdg/stats", strlen(json_str), json_str, 1, 1, NULL);
-}
-
-
-int mosquitto_auth_security_init(void *user_data, struct mosquitto_opt *auth_opts, int auth_opt_count, bool reload)
-{
-	publish_stats();
-	return MOSQ_ERR_SUCCESS;
-}
-
-int mosquitto_auth_security_cleanup(void *user_data, struct mosquitto_opt *auth_opts, int auth_opt_count, bool reload)
-{
-	return MOSQ_ERR_SUCCESS;
 }
 
 
@@ -1957,14 +1951,14 @@ void player_set_uuid(struct tfdg_player *player_s, char *uuid)
 }
 
 
-void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_login(struct mosquitto_evt_acl_check *ed, const char *room, struct tfdg_room *room_s)
 {
 	char *uuid = NULL;
 	char *name = NULL;
 	struct tfdg_player *player_s = NULL, *p;
 	const char *client_id;
 
-	if(json_parse_name_uuid(msg->payload, msg->payloadlen, &name, &uuid)){
+	if(json_parse_name_uuid(ed->payload, ed->payloadlen, &name, &uuid)){
 		return;
 	}
 
@@ -1978,7 +1972,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 
 	room_set_last_event(room_s, time(NULL));
 
-	find_player_from_json(msg->payload, msg->payloadlen, room_s, &player_s);
+	find_player_from_json(ed->payload, ed->payloadlen, room_s, &player_s);
 
 	if(room_s->state == tgs_lobby){
 		if(player_s == NULL){
@@ -1993,7 +1987,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 			uuid = NULL;
 			player_set_name(player_s, name);
 			name = NULL;
-			player_s->client_id = strdup(mosquitto_client_id(client));
+			player_s->client_id = strdup(mosquitto_client_id(ed->client));
 			player_set_dice_count(player_s, room_s->options.max_dice);
 			room_append_player(room_s, player_s, false);
 			room_set_player_count(room_s, room_s->player_count+1);
@@ -2005,7 +1999,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 				HASH_DELETE(hh_client_id, room_s->player_by_client_id, player_s);
 			}
 			free(player_s->client_id);
-			player_s->client_id = strdup(mosquitto_client_id(client));
+			player_s->client_id = strdup(mosquitto_client_id(ed->client));
 			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id,  strlen(player_s->client_id), player_s);
 		}
 		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
@@ -2019,7 +2013,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 					ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 					room_s->uuid, MAX_LOG_LEN, "re-login", player_s->uuid, player_s->name);
 
-			client_id = mosquitto_client_id(client);
+			client_id = mosquitto_client_id(ed->client);
 			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, strlen(client_id), p);
 			if(p){
 				HASH_DELETE(hh_client_id, room_s->player_by_client_id, p);
@@ -2044,7 +2038,7 @@ void tfdg_handle_login(struct mosquitto *client, const char *room, struct tfdg_r
 			uuid = NULL;
 			player_set_name(player_s, name);
 			name = NULL;
-			player_s->client_id = strdup(mosquitto_client_id(client));
+			player_s->client_id = strdup(mosquitto_client_id(ed->client));
 			player_set_dice_count(player_s, 0);
 			player_set_state(player_s, tps_spectator);
 
@@ -2144,7 +2138,7 @@ void report_player_results(struct tfdg_room *room_s)
 
 
 
-void tfdg_handle_logout(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_logout(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	char *uuid = NULL;
 	char *name = NULL;
@@ -2152,7 +2146,7 @@ void tfdg_handle_logout(struct mosquitto *client, struct tfdg_room *room_s, cons
 
 	if(room_s == NULL) return;
 
-	if(json_parse_name_uuid(msg->payload, msg->payloadlen, &name, &uuid)){
+	if(json_parse_name_uuid(ed->payload, ed->payloadlen, &name, &uuid)){
 		return;
 	}
 
@@ -2287,7 +2281,7 @@ void tfdg_expire_rooms(void)
 }
 
 
-void tfdg_handle_start_game(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_start_game(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	unsigned char bytes[1];
 	struct tfdg_player *player_s, *p;
@@ -2299,7 +2293,7 @@ void tfdg_handle_start_game(struct mosquitto *client, struct tfdg_room *room_s, 
 		return;
 	}
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL || player_s != room_s->host) return;
 
 	room_s->current_count = room_s->player_count;
@@ -2488,11 +2482,11 @@ void tfdg_handle_pre_roll_dice(struct tfdg_room *room_s, struct tfdg_player *pla
 }
 
 
-void tfdg_handle_roll_dice(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_roll_dice(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
 	if(room_s->state == tgs_pre_roll){
@@ -2574,12 +2568,12 @@ static void report_summary_results(struct tfdg_room *room_s, const char *topic_s
 }
 
 
-void tfdg_handle_call_dudo(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_call_dudo(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL, *p;
 	cJSON *tree;
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
 	if(player_s->state != tps_have_dice
@@ -2611,7 +2605,7 @@ void tfdg_handle_call_dudo(struct mosquitto *client, struct tfdg_room *room_s, c
 }
 
 
-void tfdg_handle_call_calza(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_call_calza(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL, *p;
 
@@ -2619,7 +2613,7 @@ void tfdg_handle_call_calza(struct mosquitto *client, struct tfdg_room *room_s, 
 		return;
 	}
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
 
@@ -2716,17 +2710,17 @@ static void tfdg_handle_winner(struct tfdg_room *room_s)
 }
 
 
-void tfdg_handle_kick_player(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_kick_player(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *kicker_s, *player_s = NULL;
 	const char *client_id;
 
 	/* Find the player structure described by '{"uuid":""}' if it is in this room */
-	if(room_s == NULL || find_player_from_json(msg->payload, msg->payloadlen, room_s, &player_s)){
+	if(room_s == NULL || find_player_from_json(ed->payload, ed->payloadlen, room_s, &player_s)){
 		return;
 	}
 
-	client_id = mosquitto_client_id(client);
+	client_id = mosquitto_client_id(ed->client);
 	HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, strlen(client_id), kicker_s);
 
 	if(kicker_s && room_s->host == kicker_s &&
@@ -2750,11 +2744,11 @@ void tfdg_handle_kick_player(struct mosquitto *client, struct tfdg_room *room_s,
 }
 
 
-void tfdg_handle_leave_game(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_leave_game(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
 	if(room_s->state == tgs_playing_round || room_s->state == tgs_round_over || room_s->state == tgs_game_over){
@@ -2774,17 +2768,17 @@ void tfdg_handle_leave_game(struct mosquitto *client, struct tfdg_room *room_s, 
 			return;
 		}
 	}else if(room_s->state == tgs_lobby){
-		tfdg_handle_logout(client, room_s, msg);
+		tfdg_handle_logout(ed, room_s);
 	}
 }
 
 
-void tfdg_handle_undo_loser(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_undo_loser(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 	cJSON *tree;
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
 	/* Check that the client is in the correct state. */
@@ -2818,11 +2812,11 @@ void tfdg_handle_undo_loser(struct mosquitto *client, struct tfdg_room *room_s, 
 }
 
 
-void tfdg_handle_undo_winner(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_undo_winner(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
 	/* Check that the client is in the correct state. */
@@ -2864,11 +2858,11 @@ static void tfdg_handle_player_lost(struct tfdg_room *room_s, struct tfdg_player
 }
 
 
-void tfdg_handle_i_lost(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_i_lost(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 	if(room_s->round_loser) return; /* Another player has already pressed Loser, prevent a race condition */
 
@@ -2912,17 +2906,17 @@ void tfdg_handle_i_lost(struct mosquitto *client, struct tfdg_room *room_s, cons
 }
 
 
-void tfdg_handle_i_won(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_i_won(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 
 	/* Find the player structure described by '{"uuid":""}' if it is in this room */
-	if(room_s == NULL || find_player_from_json(msg->payload, msg->payloadlen, room_s, &player_s)){
+	if(room_s == NULL || find_player_from_json(ed->payload, ed->payloadlen, room_s, &player_s)){
 		return;
 	}
 	/* Check that the client sending this message matches the client that is
 	 * attached to this player. */
-	if(strcmp(mosquitto_client_id(client), player_s->client_id)){
+	if(strcmp(mosquitto_client_id(ed->client), player_s->client_id)){
 		return;
 	}
 	/* Check that the client is in the correct state. */
@@ -2967,7 +2961,7 @@ void publish_int_option(struct tfdg_room *room_s, const char *option, int value)
 }
 
 
-void tfdg_handle_sound(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg, const char *type)
+static void tfdg_handle_sound(const struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s, const char *type)
 {
 	char topic[200];
 	uint8_t value;
@@ -2990,13 +2984,13 @@ void tfdg_handle_sound(struct mosquitto *client, struct tfdg_room *room_s, const
 }
 
 
-void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, const struct mosquitto_acl_msg *msg)
+static void tfdg_handle_set_option(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
 	cJSON *tree, *j_option, *j_value;
 	int ival;
 
-	player_s = find_player_check_id(client, room_s, msg);
+	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
 	if(room_s->state != tgs_lobby
@@ -3005,7 +2999,7 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 		return;
 	}
 
-	tree = cJSON_ParseWithLength(msg->payload, msg->payloadlen);
+	tree = cJSON_ParseWithLength(ed->payload, ed->payloadlen);
 	if(tree){
 		j_option = cJSON_GetObjectItemCaseSensitive(tree, "option");
 		if(j_option == NULL || cJSON_IsString(j_option) == false){
@@ -3107,9 +3101,9 @@ void tfdg_handle_set_option(struct mosquitto *client, struct tfdg_room *room_s, 
 }
 
 
-
-int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *client, const struct mosquitto_acl_msg *msg)
+static int callback_acl_check(int event, void *event_data, void *userdata)
 {
+	struct mosquitto_evt_acl_check *ed = event_data;
 	struct tfdg_room *room_s = NULL;
 	struct tfdg_player *player_s = NULL;
 	char *room;
@@ -3117,27 +3111,27 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 	char *player;
 	const char *client_id;
 
-	if(strncmp(msg->topic, "tfdg/", 5) != 0){
+	if(strncmp(ed->topic, "tfdg/", 5) != 0){
 		/* We only want messages in the 'tfdg/' tree. */
 		return MOSQ_ERR_PLUGIN_DEFER;
 	}
 
 	/* Subscription access check */
-	if(access == MOSQ_ACL_SUBSCRIBE){
-		if(strcmp(msg->topic, "tfdg/#") == 0
-				|| strcmp(msg->topic, "tfdg/stats") == 0){
+	if(ed->access == MOSQ_ACL_SUBSCRIBE){
+		if(strcmp(ed->topic, "tfdg/#") == 0
+				|| strcmp(ed->topic, "tfdg/stats") == 0){
 
 			return MOSQ_ERR_SUCCESS;
 		}else{
 			return MOSQ_ERR_ACL_DENIED;
 		}
-	}else if(access == MOSQ_ACL_READ){
-		if(strcmp(msg->topic, "tfdg/stats") == 0){
+	}else if(ed->access == MOSQ_ACL_READ){
+		if(strcmp(ed->topic, "tfdg/stats") == 0){
 			return MOSQ_ERR_SUCCESS;
 		}
 	}
 
-	tfdg_topic_tokenise(msg->topic+5, &room, &cmd, &player);
+	tfdg_topic_tokenise(ed->topic+5, &room, &cmd, &player);
 
 	if(room == NULL || cmd == NULL){
 		free(room);
@@ -3161,7 +3155,7 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 
 	HASH_FIND(hh, room_by_uuid, room, strlen(room), room_s);
 
-	if(access == MOSQ_ACL_READ){
+	if(ed->access == MOSQ_ACL_READ){
 		free(room);
 
 		if(strcmp(cmd, "room-closing") == 0 && room_s && room_s->state == tgs_game_over){
@@ -3181,7 +3175,7 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 				free(player);
 				return MOSQ_ERR_ACL_DENIED;
 			}
-			client_id = mosquitto_client_id(client);
+			client_id = mosquitto_client_id(ed->client);
 			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, strlen(client_id), player_s);
 
 
@@ -3195,7 +3189,7 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 				return MOSQ_ERR_SUCCESS;
 			}
 		}else if(strcmp(cmd, "loser-results") == 0 || strcmp(cmd, "loser-summary-results") == 0){
-			client_id = mosquitto_client_id(client);
+			client_id = mosquitto_client_id(ed->client);
 			DL_FOREACH(room_s->lost_players, player_s){
 				if(strcmp(player_s->client_id, client_id) == 0){
 					free(cmd);
@@ -3212,7 +3206,7 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 			if(room_s == NULL){
 				return MOSQ_ERR_ACL_DENIED;
 			}
-			client_id = mosquitto_client_id(client);
+			client_id = mosquitto_client_id(ed->client);
 			if(client_id == NULL){
 				return MOSQ_ERR_ACL_DENIED;
 			}
@@ -3223,40 +3217,40 @@ int mosquitto_auth_acl_check(void *user_data, int access, struct mosquitto *clie
 				return MOSQ_ERR_SUCCESS;
 			}
 		}
-	}else if(access == MOSQ_ACL_WRITE){
+	}else if(ed->access == MOSQ_ACL_WRITE){
 		if(room_s){
 			room_set_last_event(room_s, time(NULL));
 		}
 		if(!strcmp(cmd, "login")){
-			tfdg_handle_login(client, room, room_s, msg);
+			tfdg_handle_login(ed, room, room_s);
 		}else if(!strcmp(cmd, "logout")){
-			tfdg_handle_logout(client, room_s, msg);
+			tfdg_handle_logout(ed, room_s);
 		}else if(!strcmp(cmd, "start-game")){
-			tfdg_handle_start_game(client, room_s, msg);
+			tfdg_handle_start_game(ed, room_s);
 		}else if(!strcmp(cmd, "roll-dice")){
-			tfdg_handle_roll_dice(client, room_s, msg);
+			tfdg_handle_roll_dice(ed, room_s);
 		}else if(!strcmp(cmd, "call-dudo")){
-			tfdg_handle_call_dudo(client, room_s, msg);
+			tfdg_handle_call_dudo(ed, room_s);
 		}else if(!strcmp(cmd, "call-calza")){
-			tfdg_handle_call_calza(client, room_s, msg);
+			tfdg_handle_call_calza(ed, room_s);
 		}else if(!strcmp(cmd, "i-lost")){
-			tfdg_handle_i_lost(client, room_s, msg);
+			tfdg_handle_i_lost(ed, room_s);
 		}else if(!strcmp(cmd, "i-won")){
-			tfdg_handle_i_won(client, room_s, msg);
+			tfdg_handle_i_won(ed, room_s);
 		}else if(!strcmp(cmd, "undo-loser")){
-			tfdg_handle_undo_loser(client, room_s, msg);
+			tfdg_handle_undo_loser(ed, room_s);
 		}else if(!strcmp(cmd, "undo-winner")){
-			tfdg_handle_undo_winner(client, room_s, msg);
+			tfdg_handle_undo_winner(ed, room_s);
 		}else if(!strcmp(cmd, "leave-game")){
-			tfdg_handle_leave_game(client, room_s, msg);
+			tfdg_handle_leave_game(ed, room_s);
 		}else if(!strcmp(cmd, "kick-player")){
-			tfdg_handle_kick_player(client, room_s, msg);
+			tfdg_handle_kick_player(ed, room_s);
 		}else if(!strcmp(cmd, "set-option")){
-			tfdg_handle_set_option(client, room_s, msg);
+			tfdg_handle_set_option(ed, room_s);
        }else if(!strcmp(cmd, "snd-higher")){
-			tfdg_handle_sound(client, room_s, msg, "higher");
+			tfdg_handle_sound(ed, room_s, "higher");
        }else if(!strcmp(cmd, "snd-exact")){
-			tfdg_handle_sound(client, room_s, msg, "exact");
+			tfdg_handle_sound(ed, room_s, "exact");
 		}
 		free(room);
 		free(cmd);
