@@ -176,6 +176,7 @@ static void publish_int_option(struct tfdg_room *room_s, const char *option, int
 static cJSON *room_pre_roll_to_cjson(struct tfdg_room *room_s);
 static void load_stats(void);
 static int callback_acl_check(int event, void *event_data, void *userdata);
+static void publish_stats(void);
 
 static struct tfdg_stats stats;
 
@@ -1206,6 +1207,8 @@ int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, s
 		state_file = strdup("tfdg-state.json");
 	}
 	load_full_state();
+
+	publish_stats();
 
 	return mosquitto_callback_register(mosq_pid, MOSQ_EVT_ACL_CHECK, callback_acl_check, NULL, NULL);
 }
