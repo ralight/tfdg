@@ -98,6 +98,7 @@ struct tfdg_room_options{
 	bool random_position;
 	bool roll_dice_at_start;
 	bool show_results_table;
+	bool swap_direction;
 };
 
 
@@ -129,6 +130,7 @@ struct tfdg_room{
 	struct tfdg_room_options options;
 	int pre_roll_count;
 	int totals[20];
+	bool forwards;
 };
 
 
@@ -331,6 +333,11 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 	if(room_s->options.losers_see_dice != true){
 		jtmp = cJSON_CreateBool(room_s->options.losers_see_dice);
 		cJSON_AddItemToObject(game, "losers-see-dice", jtmp);
+	}
+
+	if(room_s->options.swap_direction != false){
+		jtmp = cJSON_CreateBool(room_s->options.swap_direction);
+		cJSON_AddItemToObject(game, "swap-direction", jtmp);
 	}
 
 	if(room_s->options.show_results_table != true){
@@ -654,6 +661,9 @@ static cJSON *json_create_options_obj(struct tfdg_room *room_s)
 	jtmp = cJSON_CreateBool(room_s->options.show_results_table);
 	cJSON_AddItemToObject(j_options, "show-results-table", jtmp);
 
+	jtmp = cJSON_CreateBool(room_s->options.swap_direction);
+	cJSON_AddItemToObject(j_options, "swap-direction", jtmp);
+
 	return j_options;
 }
 
@@ -821,6 +831,20 @@ void tfdg_send_current_state(struct tfdg_room *room_s, struct tfdg_player *playe
 		if(player_s->state == tps_have_dice){
 			dice = json_create_my_dice_array(player_s);
 			cJSON_AddItemToObject(tree, "dice", dice);
+		}
+		if(room_s->options.swap_direction){
+			cJSON_AddBoolToObject(tree, "forwards", room_s->forwards);
+
+			if(room_s->current_count > 2){
+				if(room_s->forwards){
+					jtmp = player_to_cjson(room_s->starter->next);
+				}else{
+					jtmp = player_to_cjson(room_s->starter->prev);
+				}
+				if(jtmp){
+					cJSON_AddItemToObject(tree, "next-player", jtmp);
+				}
+			}
 		}
 	}
 
@@ -1071,6 +1095,7 @@ static void load_game_state(void)
 				|| json_get_bool(j_options, "losers-see-dice", &room_s->options.losers_see_dice) != 0
 				|| json_get_bool(j_options, "random-max-dice-value", &room_s->options.random_max_dice_value) != 0
 				|| json_get_bool(j_options, "show-results-table", &room_s->options.show_results_table) != 0
+				|| json_get_bool(j_options, "swap-direction", &room_s->options.swap_direction) != 0
 				|| json_get_bool(j_options, "random-position", &room_s->options.swap_direction) != 0
 				){
 
@@ -1551,6 +1576,9 @@ static cJSON *room_create_json(const char *uuid)
 	jtmp = cJSON_CreateBool(false);
 	cJSON_AddItemToObject(j_options, "show-results-table", jtmp);
 
+	jtmp = cJSON_CreateBool(false);
+	cJSON_AddItemToObject(j_options, "swap-direction", jtmp);
+
 	return j_room;
 }
 
@@ -1858,9 +1886,11 @@ static struct tfdg_room *room_create(const char *room)
 	room_set_option_int(room_s, &room_s->options.max_dice, "max-dice", 5);
 	room_set_option_int(room_s, &room_s->options.max_dice_value, "max-dice-value", 6);
 	room_set_option_bool(room_s, &room_s->options.allow_calza, "allow-calza", true);
+	room_set_option_bool(room_s, &room_s->options.swap_direction, "swap-direction", false);
 	room_set_option_bool(room_s, &room_s->options.roll_dice_at_start, "roll-dice-at-start", true);
 	room_set_option_bool(room_s, &room_s->options.losers_see_dice, "losers-see-dice", true);
 	room_set_option_bool(room_s, &room_s->options.show_results_table, "show-results-table", true);
+	room_set_option_bool(room_s, &room_s->options.random_max_dice_value, "random-max-dice-value", false);
 	room_set_option_bool(room_s, &room_s->options.random_position, "random-position", false);
 
 	cJSON_AddItemToArray(j_all_games, room_s->json);
@@ -2269,6 +2299,21 @@ static void tfdg_new_round(struct tfdg_room *room_s)
 		jtmp = player_to_cjson(room_s->starter);
 		if(jtmp){
 			cJSON_AddItemToObject(tree, "starter", jtmp);
+		}
+		if(room_s->options.swap_direction){
+			room_s->forwards = !room_s->forwards;
+
+			cJSON_AddBoolToObject(tree, "forwards", room_s->forwards);
+			if(room_s->current_count > 2){
+				if(room_s->forwards){
+					jtmp = player_to_cjson(room_s->starter->next);
+				}else{
+					jtmp = player_to_cjson(room_s->starter->prev);
+				}
+				if(jtmp){
+					cJSON_AddItemToObject(tree, "next-player", jtmp);
+				}
+			}
 		}
 
 		jtmp = cJSON_CreateBool(room_s->palifico_round);
@@ -3092,6 +3137,17 @@ static void tfdg_handle_set_option(struct mosquitto_evt_acl_check *ed, struct tf
 						"allow-calza", cJSON_IsTrue(j_value));
 
 				publish_bool_option(room_s, "allow-calza", cJSON_IsTrue(j_value));
+			}
+		}else if(strcmp(j_option->valuestring, "swap-direction") == 0){
+			if(cJSON_IsBool(j_value)){
+				room_set_option_bool(room_s, &room_s->options.swap_direction, "swap-direction", cJSON_IsTrue(j_value));
+
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
+						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
+						"swap-direction", cJSON_IsTrue(j_value));
+
+				publish_bool_option(room_s, "swap-direction", cJSON_IsTrue(j_value));
 			}
 		}else if(strcmp(j_option->valuestring, "roll-dice-at-start") == 0){
 			if(cJSON_IsBool(j_value)){

@@ -240,6 +240,20 @@ function addPlayerCard(data) {
 	$("#gametable").append(card);
 }
 
+function setPlayDirection(data){
+	if("forwards" in data){
+		$("#gametable div div.card-header").each(function(index){
+			let h = $(this).html();
+			if(data["forwards"]){
+				h = h.replace(" ⇦", " ⇨");
+			}else{
+				h = h.replace(" ⇨", " ⇦");
+			}
+			$(this).html(h);
+		});
+	}
+}
+
 function resetPlayerCardDice(){
 	$("#gametable div div.card-body").each(function(index){
 		let uuid = $(this).find("div")[0].id.substr(0, 36);
@@ -364,6 +378,9 @@ function newRound(data){
 		$("#palifico-banner").addClass("d-none");
 	}
 	setStarter(data['starter']);
+	setNextPlayer(data);
+	setPlayDirection(data);
+
 	$("#b-undo-loser").addClass("d-none");
 	$("#b-undo-winner").addClass("d-none");
 	$("#b-loser").removeClass("d-none");
@@ -436,13 +453,21 @@ function setStarter(data){
 	$("#"+uuid).addClass("border-success text-white");
 }
 
+function setNextPlayer(data){
+	if("next-player" in data){
+		let uuid = data['next-player']['uuid'];
+		$("#"+uuid+" div.card-header").addClass("bg-primary");
+		$("#"+uuid).addClass("border-primary text-white");
+	}
+}
+
 function callCalza(){
 	easy_publish("call-calza");
 }
 
 function clearBGs(){
-	$("div.card div.card-header").removeClass("bg-success bg-danger bg-warning");
-	$("div.card").removeClass("border-success border-danger border-warning text-white");
+	$("div.card div.card-header").removeClass("bg-primary bg-success bg-danger bg-warning");
+	$("div.card").removeClass("border-primary border-success border-danger border-warning text-white");
 	$("#"+myuuid).addClass("border-info");
 	$("#"+myuuid).css("border-width", "2px");
 }
@@ -835,6 +860,9 @@ function handleSetOption(data){
 	}
 	if("random-position" in data){
 		$("#t-o-random-position").prop("checked", data['random-position']);
+	}
+	if("swap-direction" in data){
+		$("#t-o-swap-direction").prop("checked", data['swap-direction']);
 	}
 	if("show-results-table" in data){
 		if(data['show-results-table']){
@@ -1277,6 +1305,10 @@ $(window).on("load", function(){
 								<div class="custom-control custom-switch text-left">
 									<input type="checkbox" class="custom-control-input" id="t-o-random-position" onclick="setBoolOption('random-position', this.checked);">
 									<label class="custom-control-label" for="t-o-random-position">Random player position per round</label>
+								</div>
+								<div class="custom-control custom-switch text-left">
+									<input type="checkbox" class="custom-control-input" id="t-o-swap-direction" onclick="setBoolOption('swap-direction', this.checked);">
+									<label class="custom-control-label" for="t-o-swap-direction">Swap direction of play each round</label>
 								</div>
 								<div class="form-group text-left mt-1">
 									Maximum dice count:
