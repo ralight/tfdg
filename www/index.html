@@ -600,8 +600,12 @@ function showMyDice(data){
 		uuid = myuuid;
 		$("#"+uuid+"-d"+(i+1)).empty();
 		$("#"+uuid+"-d"+(i+1)).removeClass(dice_styles);
-		if(v != " "){
+		if(v == -1){
+			$("#"+uuid+"-d"+(i+1)).addClass("diceU");
+				  console.log(i + " diceU");
+		}else if(v != " "){
 			$("#"+uuid+"-d"+(i+1)).addClass("dice"+v);
+				console.log(i + " dice"+v);
 		}
 	}
 	for(;i<options['max-dice'];i++){
@@ -864,6 +868,11 @@ function handleSetOption(data){
 	if("swap-direction" in data){
 		$("#t-o-swap-direction").prop("checked", data['swap-direction']);
 	}
+	if("random-mask-percentage" in data){
+		options['random-mask-percentage'] = data['random-mask-percentage'];
+		$("#l-random-mask-percentage").text(options['random-mask-percentage']);
+		$("#random-mask-percentage").val(options['random-mask-percentage']);
+	}
 	if("show-results-table" in data){
 		if(data['show-results-table']){
 			$("#summary-results").removeClass("d-none");
@@ -1117,6 +1126,12 @@ function maxDiceValueRangeChange(val){
 	mqtt.publish(topic_prefix+"set-option", JSON.stringify(data));
 }
 
+function randomMaskRangeChange(val){
+	$("#l-random-mask-percentage").text(val);
+	let data = {"name":myname, "uuid":myuuid, "option":"random-mask-percentage", "value":parseInt(val)};
+	mqtt.publish(topic_prefix+"set-option", JSON.stringify(data));
+}
+
 function maxDiceRangeChange(val){
 	$("#l-max-dice-range").text(val);
 	let data = {"name":myname, "uuid":myuuid, "option":"max-dice", "value":parseInt(val)};
@@ -1313,6 +1328,11 @@ $(window).on("load", function(){
 								<div class="custom-control custom-switch text-left">
 									<input type="checkbox" class="custom-control-input" id="t-o-swap-direction" onclick="setBoolOption('swap-direction', this.checked);">
 									<label class="custom-control-label" for="t-o-swap-direction">Swap direction of play each round</label>
+								</div>
+								<div class="form-group text-left mt-1">
+									Random dice mask percentage:
+									<label for="random-mask-percentage" id="l-random-mask-percentage">0</label>
+									<input type="range" class="form-control-range" id="random-mask-percentage" value="0" min="0" max="20" oninput="randomMaskRangeChange(this.value);"/>
 								</div>
 								<div class="form-group text-left mt-1">
 									Maximum dice count:

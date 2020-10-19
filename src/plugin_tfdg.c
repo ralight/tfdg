@@ -82,6 +82,7 @@ struct tfdg_player{
 	cJSON *json;
 	int dice_count;
 	int dice_values[MAX_DICE];
+	int dice_mask[MAX_DICE];
 	int login_count;
 	enum tfdg_player_state state;
 	char pre_roll;
@@ -92,6 +93,7 @@ struct tfdg_player{
 struct tfdg_room_options{
 	int max_dice;
 	int max_dice_value;
+	int random_mask_percentage;
 	bool allow_calza;
 	bool losers_see_dice;
 	bool random_max_dice_value;
@@ -363,6 +365,11 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 	if(room_s->options.random_max_dice_value != false){
 		jtmp = cJSON_CreateBool(room_s->options.random_max_dice_value);
 		cJSON_AddItemToObject(game, "random-max-dice-value", jtmp);
+	}
+
+	if(room_s->options.random_mask_percentage != 0){
+		jtmp = cJSON_CreateNumber(room_s->options.random_mask_percentage);
+		cJSON_AddItemToObject(game, "random-mask-percentage", jtmp);
 	}
 
 	jtmp = cJSON_CreateString(reason);
@@ -654,6 +661,9 @@ static cJSON *json_create_options_obj(struct tfdg_room *room_s)
 
 	jtmp = cJSON_CreateNumber(room_s->options.max_dice_value);
 	cJSON_AddItemToObject(j_options, "max-dice-value", jtmp);
+
+	jtmp = cJSON_CreateNumber(room_s->options.random_mask_percentage);
+	cJSON_AddItemToObject(j_options, "random-mask-percentage", jtmp);
 
 	jtmp = cJSON_CreateBool(room_s->options.random_position);
 	cJSON_AddItemToObject(j_options, "random-position", jtmp);
@@ -1091,6 +1101,7 @@ static void load_game_state(void)
 		}
 		if(json_get_int(j_options, "max-dice", &room_s->options.max_dice) != 0
 				|| json_get_int(j_options, "max-dice-value", &room_s->options.max_dice_value) != 0
+				|| json_get_int(j_options, "random-mask-percentage", &room_s->options.random_mask_percentage) != 0
 				|| json_get_bool(j_options, "allow-calza", &room_s->options.allow_calza) != 0
 				|| json_get_bool(j_options, "losers-see-dice", &room_s->options.losers_see_dice) != 0
 				|| json_get_bool(j_options, "random-max-dice-value", &room_s->options.random_max_dice_value) != 0
@@ -1102,6 +1113,12 @@ static void load_game_state(void)
 			j_game = j_game->next;
 			cleanup_room(room_s, "config-load -1");
 			continue;
+		}
+		if(room_s->options.random_mask_percentage < 0){
+			room_s->options.random_mask_percentage = 0;
+		}
+		if(room_s->options.random_mask_percentage > 20){
+			room_s->options.random_mask_percentage = 20;
 		}
 		if(room_s->options.max_dice > MAX_DICE){
 			room_s->options.max_dice = MAX_DICE;
@@ -1561,8 +1578,11 @@ static cJSON *room_create_json(const char *uuid)
 	jtmp = cJSON_CreateNumber(6);
 	cJSON_AddItemToObject(j_options, "max-dice-value", jtmp);
 
-	jtmp = cJSON_CreateNumber(4);
-	cJSON_AddItemToObject(j_options, "results-timeout", jtmp);
+	jtmp = cJSON_CreateNumber(0);
+	cJSON_AddItemToObject(j_options, "random-mask-percentage", jtmp);
+
+	jtmp = cJSON_CreateBool(false);
+	cJSON_AddItemToObject(j_options, "random-max-dice-value", jtmp);
 
 	jtmp = cJSON_CreateBool(true);
 	cJSON_AddItemToObject(j_options, "allow-calza", jtmp);
@@ -1885,6 +1905,7 @@ static struct tfdg_room *room_create(const char *room)
 
 	room_set_option_int(room_s, &room_s->options.max_dice, "max-dice", 5);
 	room_set_option_int(room_s, &room_s->options.max_dice_value, "max-dice-value", 6);
+	room_set_option_int(room_s, &room_s->options.random_mask_percentage, "random-mask-percentage", 0);
 	room_set_option_bool(room_s, &room_s->options.allow_calza, "allow-calza", true);
 	room_set_option_bool(room_s, &room_s->options.swap_direction, "swap-direction", false);
 	room_set_option_bool(room_s, &room_s->options.roll_dice_at_start, "roll-dice-at-start", true);
@@ -1932,16 +1953,30 @@ static cJSON *player_create_json(void)
 static void player_set_dice_values(struct tfdg_room *room_s, struct tfdg_player *player_s, unsigned char *bytes, int max_dice_value)
 {
 	int i;
+	int r;
 	cJSON *j_array;
 	cJSON *jtmp;
+	int mask_chance;
 
 	j_array = cJSON_CreateArray();
+	mask_chance = (room_s->options.random_mask_percentage * 255) / 100;
 
+	r = 0;
 	for(i=0; i<player_s->dice_count; i++){
-		player_s->dice_values[i] = (bytes[i]%max_dice_value)+1;
+		player_s->dice_values[i] = (bytes[r]%max_dice_value)+1;
+		r++;
 		jtmp = cJSON_CreateNumber(player_s->dice_values[i]);
 		cJSON_AddItemToArray(j_array, jtmp);
 		room_s->totals[player_s->dice_values[i]-1]++;
+
+		if(mask_chance > 0){
+			if(bytes[r] <= mask_chance){
+				player_s->dice_mask[i] = 1;
+			}else{
+				player_s->dice_mask[i] = 0;
+			}
+			r++;
+		}
 	}
 	cJSON_ReplaceItemInObject(player_s->json, "dice", j_array);
 }
@@ -2248,7 +2283,7 @@ static void tfdg_new_round(struct tfdg_room *room_s)
 	struct tfdg_player *p;
 	int i;
 	int count;
-	unsigned char bytes[1000];
+	unsigned char bytes[4001]; /* 200 players * 20 dice */
 	cJSON *tree, *jtmp;
 	int max_dice_value;
 
@@ -2399,7 +2434,11 @@ static cJSON *json_create_my_dice_array(struct tfdg_player *player_s)
 
 	tree = cJSON_CreateArray();
 	for(i=0; i<player_s->dice_count; i++){
-		jtmp = cJSON_CreateNumber(player_s->dice_values[i]);
+		if(player_s->dice_mask[i]){
+			jtmp = cJSON_CreateNumber(-1);
+		}else{
+			jtmp = cJSON_CreateNumber(player_s->dice_values[i]);
+		}
 		if(jtmp == NULL){
 			return NULL;
 		}
@@ -3115,6 +3154,18 @@ static void tfdg_handle_set_option(struct mosquitto_evt_acl_check *ed, struct tf
 						"random-max-dice-value", cJSON_IsTrue(j_value));
 
 				publish_bool_option(room_s, "random-max-dice-value", cJSON_IsTrue(j_value));
+			}
+		}else if(strcmp(j_option->valuestring, "random-mask-percentage") == 0){
+			if(cJSON_IsNumber(j_value)){
+				ival = j_value->valueint;
+				room_set_option_int(room_s, &room_s->options.random_mask_percentage, "random-mask-percentage", ival);
+
+				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
+						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
+						"random-mask-percentage", ival);
+
+				publish_int_option(room_s, "random-mask-percentage", ival);
 			}
 		}else if(strcmp(j_option->valuestring, "random-position") == 0){
 			if(cJSON_IsBool(j_value)){
