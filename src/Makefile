@@ -11,7 +11,7 @@ plugin_tfdg.so : plugin_tfdg.c
 	${CROSS_COMPILE}${CC} ${CFLAGS} ${CPPFLAGS} -Wall -ggdb -I/usr/include/cjson -I/usr/local/include/cjson -I. -I../lib -fPIC -shared $< -o $@ -lcjson
 
 tfdg_test : tfdg_test.c plugin_tfdg.c
-	${CROSS_COMPILE}${CC} ${CFLAGS} ${CPPFLAGS} -coverage -Wall -ggdb -I/usr/include/cjson -I/usr/local/include/cjson -I. -I../lib $^ -o $@ -lcrypto -lcjson -lcunit
+	${CROSS_COMPILE}${CC} ${CFLAGS} ${CPPFLAGS} -coverage -Wall -ggdb -I/usr/include/cjson -I/usr/local/include/cjson -I. -I../lib $^ -o $@ -lcjson -lcunit
 
 test : tfdg_test
 	./tfdg_test
