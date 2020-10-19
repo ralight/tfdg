@@ -1108,7 +1108,7 @@ static void load_game_state(void)
 				|| json_get_bool(j_options, "random-max-dice-value", &room_s->options.random_max_dice_value) != 0
 				|| json_get_bool(j_options, "show-results-table", &room_s->options.show_results_table) != 0
 				|| json_get_bool(j_options, "swap-direction", &room_s->options.swap_direction) != 0
-				|| json_get_bool(j_options, "random-position", &room_s->options.swap_direction) != 0
+				|| json_get_bool(j_options, "random-position", &room_s->options.random_position) != 0
 				){
 
 			j_game = j_game->next;
@@ -2328,6 +2328,7 @@ static void tfdg_new_round(struct tfdg_room *room_s)
 
 	if(room_s->options.random_position){
 		room_shuffle_players(room_s);
+		tfdg_send_lobby_players(room_s);
 	}
 
 	if(RAND_bytes(bytes, count) == 1){
