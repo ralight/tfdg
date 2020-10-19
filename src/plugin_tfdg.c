@@ -1061,6 +1061,7 @@ static void load_game_state(void)
 		room_s = calloc(1, sizeof(struct tfdg_room));
 		if(room_s == NULL) return;
 		room_s->json = j_game;
+		room_s->forwards = true;
 
 		if(json_get_int(j_game, "player-count", &room_s->player_count) != 0
 				|| json_get_int(j_game, "state", &room_s->state) != 0
@@ -2146,11 +2147,29 @@ static void tfdg_handle_login(struct mosquitto_evt_acl_check *ed, const char *ro
 }
 
 
+static void json_create_player_result(cJSON *tree, struct tfdg_player *player_s)
+{
+	int i;
+	cJSON *player, *array, *jtmp;
+
+	player = player_to_cjson(player_s);
+	if(player){
+		array = cJSON_CreateArray();
+		for(i=0; i<player_s->dice_count; i++){
+			if(player_s->dice_values[i] != 0){
+				jtmp = cJSON_CreateNumber(player_s->dice_values[i]);
+				cJSON_AddItemToArray(array, jtmp);
+			}
+		}
+		cJSON_AddItemToObject(player, "dice", array);
+		cJSON_AddItemToArray(tree, player);
+	}
+}
+
 static cJSON *json_create_results_array(struct tfdg_room *room_s)
 {
 	struct tfdg_player *p, *start = NULL;
-	cJSON *tree, *player, *array, *jtmp;
-	int i;
+	cJSON *tree;
 
 	if(room_s->dudo_caller){
 		CDL_FOREACH(room_s->players, p){
@@ -2172,18 +2191,13 @@ static cJSON *json_create_results_array(struct tfdg_room *room_s)
 		start = room_s->players;
 	}
 	tree = cJSON_CreateArray();
-	CDL_FOREACH(start, p){
-		player = player_to_cjson(p);
-		if(player){
-			array = cJSON_CreateArray();
-			for(i=0; i<p->dice_count; i++){
-				if(p->dice_values[i] != 0){
-					jtmp = cJSON_CreateNumber(p->dice_values[i]);
-					cJSON_AddItemToArray(array, jtmp);
-				}
-			}
-			cJSON_AddItemToObject(player, "dice", array);
-			cJSON_AddItemToArray(tree, player);
+	if(room_s->forwards){
+		CDL_FOREACH(start, p){
+			json_create_player_result(tree, p);
+		}
+	}else{
+		CDL_FOREACH2(start, p, prev){
+			json_create_player_result(tree, p);
 		}
 	}
 	return tree;
@@ -2306,6 +2320,11 @@ static void tfdg_new_round(struct tfdg_room *room_s)
 	room_set_dudo_caller(room_s, NULL);
 	room_set_round_loser(room_s, NULL);
 	room_set_round_winner(room_s, NULL);
+	if(room_s->options.swap_direction){
+		room_s->forwards = !room_s->forwards;
+	}else{
+		room_s->forwards = true;
+	}
 
 	if(room_s->options.random_position){
 		room_shuffle_players(room_s);
@@ -2327,8 +2346,9 @@ static void tfdg_new_round(struct tfdg_room *room_s)
 		}
 
 		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
-				ANSI_MAGENTA "%d (%d players)" ANSI_RESET "\n",
-				room_s->uuid, MAX_LOG_LEN, "new-round", room_s->round, room_s->current_count);
+				ANSI_MAGENTA "%d (%d players, %s)" ANSI_RESET "\n",
+				room_s->uuid, MAX_LOG_LEN, "new-round", room_s->round, room_s->current_count,
+				room_s->forwards?"forwards":"reverse");
 
 		tree = cJSON_CreateObject();
 		jtmp = player_to_cjson(room_s->starter);
@@ -2336,8 +2356,6 @@ static void tfdg_new_round(struct tfdg_room *room_s)
 			cJSON_AddItemToObject(tree, "starter", jtmp);
 		}
 		if(room_s->options.swap_direction){
-			room_s->forwards = !room_s->forwards;
-
 			cJSON_AddBoolToObject(tree, "forwards", room_s->forwards);
 			if(room_s->current_count > 2){
 				if(room_s->forwards){
@@ -2625,7 +2643,11 @@ static cJSON *json_create_dudo_candidates_object(struct tfdg_room *room_s)
 			cJSON_AddItemToArray(tree, j_player);
 		}
 
-		j_player = player_to_cjson(room_s->dudo_caller->prev);
+		if(room_s->forwards){
+			j_player = player_to_cjson(room_s->dudo_caller->prev);
+		}else{
+			j_player = player_to_cjson(room_s->dudo_caller->next);
+		}
 		if(j_player){
 			cJSON_AddItemToArray(tree, j_player);
 		}
@@ -2690,7 +2712,11 @@ static void tfdg_handle_call_dudo(struct mosquitto_evt_acl_check *ed, struct tfd
 		player_set_state(player_s, tps_awaiting_loser);
 	}
 	player_set_state(player_s, tps_dudo_candidate);
-	player_set_state(player_s->prev, tps_dudo_candidate);
+	if(room_s->forwards){
+		player_set_state(player_s->prev, tps_dudo_candidate);
+	}else{
+		player_set_state(player_s->next, tps_dudo_candidate);
+	}
 	room_set_dudo_caller(room_s, player_s);
 
 	tree = json_create_dudo_candidates_object(room_s);
