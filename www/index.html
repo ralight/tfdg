@@ -44,7 +44,6 @@ const timeout_times = [0, 100, 200, 500, 1000, 2000, 3000];
 let summary_results = null;
 const snd_player = new Audio("sound/silence.mp3");
 let options = {
-	"allow-calza": true,
 	"max-dice": 5,
 	"max-dice-value": 6,
 	"roll-dice-at-start": true,
@@ -124,12 +123,6 @@ function kickPlayer(){
 function enable_calza(enabled){
 	if($("#gametable div div.card-body").length < 3 || palifico_round == true || dice_count == options['max-dice']){
 		enabled = false;
-	}else{
-		if(options['allow-calza'] && enabled == true){
-			enabled = true;
-		}else{
-			enabled = false;
-		}
 	}
 	if(enabled){
 		$("#b-calza").prop("disabled", false);
@@ -849,10 +842,6 @@ function handleHost(data){
 }
 
 function handleSetOption(data){
-	if("allow-calza" in data){
-		options['allow-calza'] = data['allow-calza'];
-		$("#t-o-allow-calza").prop("checked", options['allow-calza']);
-	}
 	if("losers-see-dice" in data){
 		$("#t-o-losers-see-dice").prop("checked", data['losers-see-dice']);
 	}
@@ -1301,10 +1290,6 @@ $(window).on("load", function(){
 								<h2 class="m-1">Table options</h2>
 								<p class="text-left">Changing these values will set cookies. <a href="privacy.html" target="_blank">Privacy</a>.</p>
 								<fieldset id="t-o-form">
-								<div class="custom-control custom-switch text-left">
-									<input type="checkbox" class="custom-control-input" id="t-o-allow-calza" checked onclick="setBoolOption('allow-calza', this.checked);">
-									<label class="custom-control-label" for="t-o-allow-calza">Allow Calza</label>
-								</div>
 								<div class="custom-control custom-switch text-left">
 									<input type="checkbox" class="custom-control-input" id="t-o-losers-see-dice" checked onclick="setBoolOption('losers-see-dice', this.checked);">
 									<label class="custom-control-label" for="t-o-losers-see-dice">Losers see dice</label>
@@ -2523,7 +2508,6 @@ $(window).on("load", function(){
 					the game and indicated by a lightning icon, is the only player
 					allowed to change the game options.</p>
 					<ul>
-						<li>Allow Calza - is the Calza call enabled (defaults to on)</li>
 						<li>Losers see dice - if set on, then players who have lost
 							will be able to see the dice for all players as the round
 							is being player, not just after Dudo/Calza has been called.

@@ -94,7 +94,6 @@ struct tfdg_room_options{
 	int max_dice;
 	int max_dice_value;
 	int random_mask_percentage;
-	bool allow_calza;
 	bool losers_see_dice;
 	bool random_max_dice_value;
 	bool random_position;
@@ -326,11 +325,6 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 
 	jtmp = cJSON_CreateNumber(room_s->player_count);
 	cJSON_AddItemToObject(game, "players", jtmp);
-
-	if(room_s->options.allow_calza != true){
-		jtmp = cJSON_CreateBool(room_s->options.allow_calza);
-		cJSON_AddItemToObject(game, "allow-calza", jtmp);
-	}
 
 	if(room_s->options.losers_see_dice != true){
 		jtmp = cJSON_CreateBool(room_s->options.losers_see_dice);
@@ -652,9 +646,6 @@ static cJSON *json_create_options_obj(struct tfdg_room *room_s)
 
 	jtmp = cJSON_CreateBool(room_s->options.losers_see_dice);
 	cJSON_AddItemToObject(j_options, "losers-see-dice", jtmp);
-
-	jtmp = cJSON_CreateBool(room_s->options.allow_calza);
-	cJSON_AddItemToObject(j_options, "allow-calza", jtmp);
 
 	jtmp = cJSON_CreateNumber(room_s->options.max_dice);
 	cJSON_AddItemToObject(j_options, "max-dice", jtmp);
@@ -1103,7 +1094,6 @@ static void load_game_state(void)
 		if(json_get_int(j_options, "max-dice", &room_s->options.max_dice) != 0
 				|| json_get_int(j_options, "max-dice-value", &room_s->options.max_dice_value) != 0
 				|| json_get_int(j_options, "random-mask-percentage", &room_s->options.random_mask_percentage) != 0
-				|| json_get_bool(j_options, "allow-calza", &room_s->options.allow_calza) != 0
 				|| json_get_bool(j_options, "losers-see-dice", &room_s->options.losers_see_dice) != 0
 				|| json_get_bool(j_options, "random-max-dice-value", &room_s->options.random_max_dice_value) != 0
 				|| json_get_bool(j_options, "show-results-table", &room_s->options.show_results_table) != 0
@@ -1586,9 +1576,6 @@ static cJSON *room_create_json(const char *uuid)
 	cJSON_AddItemToObject(j_options, "random-max-dice-value", jtmp);
 
 	jtmp = cJSON_CreateBool(true);
-	cJSON_AddItemToObject(j_options, "allow-calza", jtmp);
-
-	jtmp = cJSON_CreateBool(true);
 	cJSON_AddItemToObject(j_options, "roll-dice-at-start", jtmp);
 
 	jtmp = cJSON_CreateBool(false);
@@ -1907,7 +1894,6 @@ static struct tfdg_room *room_create(const char *room)
 	room_set_option_int(room_s, &room_s->options.max_dice, "max-dice", 5);
 	room_set_option_int(room_s, &room_s->options.max_dice_value, "max-dice-value", 6);
 	room_set_option_int(room_s, &room_s->options.random_mask_percentage, "random-mask-percentage", 0);
-	room_set_option_bool(room_s, &room_s->options.allow_calza, "allow-calza", true);
 	room_set_option_bool(room_s, &room_s->options.swap_direction, "swap-direction", false);
 	room_set_option_bool(room_s, &room_s->options.roll_dice_at_start, "roll-dice-at-start", true);
 	room_set_option_bool(room_s, &room_s->options.losers_see_dice, "losers-see-dice", true);
@@ -2740,10 +2726,6 @@ static void tfdg_handle_call_calza(struct mosquitto_evt_acl_check *ed, struct tf
 {
 	struct tfdg_player *player_s = NULL, *p;
 
-	if(room_s->options.allow_calza == false){
-		return;
-	}
-
 	player_s = find_player_check_id(ed, room_s);
 	if(player_s == NULL) return;
 
@@ -3204,17 +3186,6 @@ static void tfdg_handle_set_option(struct mosquitto_evt_acl_check *ed, struct tf
 						"random-position", cJSON_IsTrue(j_value));
 
 				publish_bool_option(room_s, "random-position", cJSON_IsTrue(j_value));
-			}
-		}else if(strcmp(j_option->valuestring, "allow-calza") == 0){
-			if(cJSON_IsBool(j_value)){
-				room_set_option_bool(room_s, &room_s->options.allow_calza, "allow-calza", cJSON_IsTrue(j_value));
-
-				printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
-						ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET " %s = %d\n",
-						room_s->uuid, MAX_LOG_LEN, "setting-option", player_s->uuid, player_s->name,
-						"allow-calza", cJSON_IsTrue(j_value));
-
-				publish_bool_option(room_s, "allow-calza", cJSON_IsTrue(j_value));
 			}
 		}else if(strcmp(j_option->valuestring, "swap-direction") == 0){
 			if(cJSON_IsBool(j_value)){
