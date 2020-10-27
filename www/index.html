@@ -4,8 +4,10 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width">
 		<title>TFDG</title>
-		<link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
+		<link href="css/toggle-bootstrap.min.css" rel="stylesheet" type="text/css">
+		<link href="css/toggle-bootstrap-dark.min.css" rel="stylesheet" type="text/css">
 		<link href="css/dice.css" rel="stylesheet" type="text/css">
+		<link href="css/dice-dark.css" rel="stylesheet" type="text/css">
 		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
 
 		<link rel="icon" href="img/favicon.png" sizes="16x16" id="icon16">
@@ -59,6 +61,19 @@ let player_to_remove = null;
 let game_playing = false;
 let host = "";
 let starter = null;
+
+
+/* Dark mode start */
+const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+const currentTheme = localStorage.getItem("theme");
+if(currentTheme == "dark"){
+	$("body").removeClass("bootstrap");
+	$("body").addClass("bootstrap-dark");
+}else{
+	$("body").removeClass("bootstrap-dark");
+	$("body").addClass("bootstrap");
+}
+/* Dark mode end */
 
 function uuidv4() {
 	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
@@ -1139,6 +1154,18 @@ function rollDice(){
 	easy_publish('roll-dice');
 }
 
+function darkToggle(){
+	if(document.body.classList.contains("bootstrap-dark")){
+		$("body").removeClass("bootstrap-dark");
+		$("body").addClass("bootstrap");
+		localStorage.setItem("theme", "light");
+	}else{
+		$("body").removeClass("bootstrap");
+		$("body").addClass("bootstrap-dark");
+		localStorage.setItem("theme", "dark");
+	}
+}
+
 $(document).ready(function(){
 	const uP = new URLSearchParams(window.location.search);
 	room_uuid = uP.get("r");
@@ -1252,15 +1279,19 @@ $(window).on("load", function(){
 		</div>
 		<div class="container d-none" id="game">
 			<div class="row">
-				<div class="col-1 ml-3 mt-1"></div>
-				<div class="col-1 ml-3 mt-1"></div>
+				<div class="col-1 ml-3 mt-1" style="padding: 0"></div>
+				<div class="col-1 ml-3 mt-1" style="padding: 0"></div>
+				<div class="col-1 ml-3 mt-1" style="padding: 0"></div>
 				<div class="col mt-1">
 					<h2 class="text-center">Fibbing Dice</h2>
 				</div>
-				<div class="col-1 mt-2">
+				<div class="col-1 mt-2" style="padding: 0">
 					<a href="/" target="_blank"><img src="img/q.svg" height="30"/></a>
 				</div>
-				<div class="col-1 mr-3 mt-2">
+				<div class="col-1 mr-1 mt-2" style="padding: 0">
+					<img onclick="darkToggle();" src="img/darklight.svg" height="30"/>
+				</div>
+				<div class="col-1 mr-3 mt-2" style="padding: 0">
 					<a data-toggle="collapse" href="#prefctrl"><img src="img/cog.svg" height="30"/></a>
 				</div>
 			</div>
