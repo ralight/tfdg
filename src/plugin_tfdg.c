@@ -25,6 +25,7 @@ Contributors:
 #include "mosquitto_broker.h"
 #include "mosquitto_plugin.h"
 #include "mosquitto.h"
+#include "mqtt_protocol.h"
 
 #define ANSI_RED "\e[0;31m"
 #define ANSI_GREEN "\e[0;32m"
@@ -193,7 +194,7 @@ static int json_get_long(cJSON *json, const char *name, long *value)
 		if(cJSON_IsNumber(jtmp) == false){
 			return MOSQ_ERR_INVAL;
 		}else{
-			*value  = jtmp->valueint;
+			*value = jtmp->valueint;
 			return MOSQ_ERR_SUCCESS;
 		}
 	}else{
@@ -211,7 +212,7 @@ static int json_get_int(cJSON *json, const char *name, int *value)
 		if(cJSON_IsNumber(jtmp) == false){
 			return MOSQ_ERR_INVAL;
 		}else{
-			*value  = jtmp->valueint;
+			*value = jtmp->valueint;
 			return MOSQ_ERR_SUCCESS;
 		}
 	}else{
@@ -229,7 +230,7 @@ static int json_get_bool(cJSON *json, const char *name, bool *value)
 		if(cJSON_IsBool(jtmp) == false){
 			return MOSQ_ERR_INVAL;
 		}else{
-			*value  = cJSON_IsTrue(jtmp);
+			*value = cJSON_IsTrue(jtmp);
 			return MOSQ_ERR_SUCCESS;
 		}
 	}else{
@@ -249,7 +250,7 @@ static int json_get_string(cJSON *json, const char *name, char **value)
 		if(cJSON_IsString(jtmp) == false){
 			return MOSQ_ERR_INVAL;
 		}else{
-			*value  = jtmp->valuestring;
+			*value = jtmp->valuestring;
 			return MOSQ_ERR_SUCCESS;
 		}
 	}else{
@@ -393,7 +394,7 @@ static void add_room_to_stats(struct tfdg_room *room_s, const char *reason)
 	jtmp = cJSON_CreateString(timestr);
 	cJSON_AddItemToObject(game, "start-time", jtmp);
 
-	jtmp = cJSON_CreateNumber(now - room_s->start_time);
+	jtmp = cJSON_CreateNumber((double)(now - room_s->start_time));
 	cJSON_AddItemToObject(game, "duration", jtmp);
 
 	jtmp = room_dice_totals(room_s);
@@ -415,7 +416,7 @@ static void cleanup_room(struct tfdg_room *room_s, const char *reason)
 		CDL_DELETE(room_s->players, p);
 		HASH_DELETE(hh_uuid, room_s->player_by_uuid, p);
 		if(p->client_id){
-			HASH_FIND(hh_client_id, room_s->player_by_client_id, p->client_id, strlen(p->client_id), tmp3);
+			HASH_FIND(hh_client_id, room_s->player_by_client_id, p->client_id, (unsigned int)strlen(p->client_id), tmp3);
 			if(tmp3){
 				HASH_DELETE(hh_client_id, room_s->player_by_client_id, tmp3);
 			}
@@ -426,7 +427,7 @@ static void cleanup_room(struct tfdg_room *room_s, const char *reason)
 		DL_DELETE(room_s->lost_players, p);
 		HASH_DELETE(hh_uuid, room_s->player_by_uuid, p);
 		if(p->client_id){
-			HASH_FIND(hh_client_id, room_s->player_by_client_id, p->client_id, strlen(p->client_id), tmp3);
+			HASH_FIND(hh_client_id, room_s->player_by_client_id, p->client_id, (unsigned int)strlen(p->client_id), tmp3);
 			if(tmp3){
 				HASH_DELETE(hh_client_id, room_s->player_by_client_id, tmp3);
 			}
@@ -514,7 +515,7 @@ static struct tfdg_player *find_player_check_id(struct mosquitto_evt_acl_check *
 	struct tfdg_player *player_s = NULL;
 
 	/* Find the player structure described by '{"uuid":""}' if it is in this room */
-	if(room_s == NULL || find_player_from_json(ed->payload, ed->payloadlen, room_s, &player_s)){
+	if(room_s == NULL || find_player_from_json(ed->payload, (size_t)ed->payloadlen, room_s, &player_s)){
 		return NULL;
 	}
 	/* Check that the client sending this message matches the client that is
@@ -528,10 +529,10 @@ static struct tfdg_player *find_player_check_id(struct mosquitto_evt_acl_check *
 
 int tfdg_topic_tokenise(const char *topic, char **room, char **cmd, char **player)
 {
-	int len;
-	int start, stop;
-	int tlen;
-	int i, j;
+	size_t len;
+	size_t start, stop;
+	size_t tlen;
+	size_t i, j;
 
 	len = strlen(topic);
 
@@ -599,9 +600,6 @@ int tfdg_topic_tokenise(const char *topic, char **room, char **cmd, char **playe
 			}
 			start = i+1;
 		}
-	}
-	if(i != len && i != len+1){
-		printf("overlong %d %d\n", i, len+1);
 	}
 	return MOSQ_ERR_SUCCESS;
 }
@@ -672,19 +670,23 @@ static cJSON *json_create_options_obj(struct tfdg_room *room_s)
 static void easy_publish(struct tfdg_room *room_s, const char *topic_suffix, cJSON *tree)
 {
 	char *json_str;
-	int json_str_len;
+	size_t json_str_len;
 	char topic[200];
 
 	if(tree){
 		json_str = cJSON_PrintUnformatted(tree);
 		json_str_len = strlen(json_str);
+		if(json_str_len > MQTT_MAX_PAYLOAD){
+			free(json_str);
+			return;
+		}
 	}else{
 		json_str = NULL;
 		json_str_len = 0;
 	}
 
 	snprintf(topic, sizeof(topic), "tfdg/%s/%s", room_s->uuid, topic_suffix);
-	mosquitto_broker_publish(NULL, topic, json_str_len, json_str, 1, 0, NULL);
+	mosquitto_broker_publish(NULL, topic, (int)json_str_len, json_str, 1, 0, NULL);
 }
 
 
@@ -947,7 +949,7 @@ static struct tfdg_player *load_lost_player_state(struct tfdg_room *room_s, cJSO
 	}
 
 	DL_APPEND(room_s->lost_players, player_s);
-	HASH_ADD_KEYPTR(hh_uuid, room_s->player_by_uuid, player_s->uuid,  strlen(player_s->uuid), player_s);
+	HASH_ADD_KEYPTR(hh_uuid, room_s->player_by_uuid, player_s->uuid, (unsigned int)strlen(player_s->uuid), player_s);
 
 	return player_s;
 }
@@ -995,7 +997,7 @@ static struct tfdg_player *load_player_state(struct tfdg_room *room_s, cJSON *j_
 		if(cJSON_IsNumber(j_die) == false){
 			goto cleanup;
 		}
-		player_s->dice_values[i] = j_die->valuedouble;
+		player_s->dice_values[i] = (int)j_die->valuedouble;
 		if(player_s->dice_values[i] > MAX_DICE_VALUE
 				|| player_s->dice_values[i] < 0
 				|| player_s->dice_values[i] > room_s->options.max_dice_value){
@@ -1005,7 +1007,7 @@ static struct tfdg_player *load_player_state(struct tfdg_room *room_s, cJSON *j_
 		i++;
 	}
 	room_append_player(room_s, player_s, onload);
-	HASH_ADD_KEYPTR(hh_uuid, room_s->player_by_uuid, player_s->uuid,  strlen(player_s->uuid), player_s);
+	HASH_ADD_KEYPTR(hh_uuid, room_s->player_by_uuid, player_s->uuid, (unsigned int)strlen(player_s->uuid), player_s);
 
 	return player_s;
 cleanup:
@@ -1083,7 +1085,7 @@ static void load_game_state(void)
 			continue;
 		}
 		strncpy(room_s->uuid, uuid, sizeof(room_s->uuid));
-		HASH_ADD_KEYPTR(hh, room_by_uuid, room_s->uuid, strlen(room_s->uuid), room_s);
+		HASH_ADD_KEYPTR(hh, room_by_uuid, room_s->uuid, (unsigned int)strlen(room_s->uuid), room_s);
 
 		j_options = cJSON_GetObjectItemCaseSensitive(j_game, "options");
 		if(j_options == NULL){
@@ -1179,14 +1181,14 @@ static void load_game_state(void)
 static void load_full_state(void)
 {
 	FILE *fptr;
-	long len;
+	size_t len;
 	char *json_str;
 	cJSON *statistics = NULL;
 
 	fptr = fopen("tfdg-state.json", "rt");
 	if(fptr){
 		fseek(fptr, 0, SEEK_END);
-		len = ftell(fptr);
+		len = (size_t)ftell(fptr);
 
 		json_str = calloc(1, len+1);
 
@@ -1287,22 +1289,22 @@ void load_stats(void)
 
 		jtmp = cJSON_GetObjectItem(j_result, "calza-success");
 		if(jtmp && cJSON_IsNumber(jtmp)){
-			stats.calza_success += jtmp->valuedouble;
+			stats.calza_success += (int)jtmp->valuedouble;
 		}
 
 		jtmp = cJSON_GetObjectItem(j_result, "calza-fail");
 		if(jtmp && cJSON_IsNumber(jtmp)){
-			stats.calza_fail += jtmp->valuedouble;
+			stats.calza_fail += (int)jtmp->valuedouble;
 		}
 
 		jtmp = cJSON_GetObjectItem(j_result, "dudo-success");
 		if(jtmp && cJSON_IsNumber(jtmp)){
-			stats.dudo_success += jtmp->valuedouble;
+			stats.dudo_success += (int)jtmp->valuedouble;
 		}
 
 		jtmp = cJSON_GetObjectItem(j_result, "dudo-fail");
 		if(jtmp && cJSON_IsNumber(jtmp)){
-			stats.dudo_fail += jtmp->valuedouble;
+			stats.dudo_fail += (int)jtmp->valuedouble;
 		}
 
 		jtmp = cJSON_GetObjectItem(j_result, "max-dice");
@@ -1310,7 +1312,7 @@ void load_stats(void)
 				&& jtmp->valuedouble >= 3 && jtmp->valuedouble <= 20){
 
 			stats.dice_count[(int)jtmp->valuedouble]++;
-			max_dice_count = jtmp->valuedouble;
+			max_dice_count = (int)jtmp->valuedouble;
 		}else{
 			stats.dice_count[5]++;
 			max_dice_count = 5;
@@ -1330,13 +1332,13 @@ void load_stats(void)
 				&& jtmp->valuedouble > 1 && jtmp->valuedouble < 100){
 
 			if(jtmp->valuedouble > stats.max_players){
-				stats.max_players = jtmp->valuedouble;
+				stats.max_players = (int)jtmp->valuedouble;
 			}
 			stats.players[(int)jtmp->valuedouble]++;
-			players = jtmp->valuedouble;
+			players = (int)jtmp->valuedouble;
 
 			jtmp = cJSON_GetObjectItem(j_result, "duration");
-			stats.durations[players*max_dice_count] += jtmp->valuedouble;
+			stats.durations[players*max_dice_count] += (int)jtmp->valuedouble;
 			stats.duration_counts[players*max_dice_count]++;
 			if(players*max_dice_count > stats.max_duration){
 				stats.max_duration = players*max_dice_count;
@@ -1348,7 +1350,7 @@ void load_stats(void)
 
 			i = 0;
 			cJSON_ArrayForEach(jtmp, j_array){
-				stats.thrown_dice_values[i] += jtmp->valuedouble;
+				stats.thrown_dice_values[i] += (int)jtmp->valuedouble;
 				i++;
 			}
 		}
@@ -1360,6 +1362,7 @@ void publish_stats(void)
 {
 	cJSON *tree, *jtmp, *j_array;
 	char *json_str;
+	size_t json_str_len;
 	int i;
 	double success, fail, total, count;
 
@@ -1517,8 +1520,12 @@ void publish_stats(void)
 	json_str = cJSON_PrintUnformatted(tree);
 	cJSON_Delete(tree);
 	if(json_str == NULL) return;
+	json_str_len = strlen(json_str);
+	if(json_str_len > MQTT_MAX_PAYLOAD){
+		return;
+	}
 
-	mosquitto_broker_publish(NULL, "tfdg/stats", strlen(json_str), json_str, 1, 1, NULL);
+	mosquitto_broker_publish(NULL, "tfdg/stats", (int)json_str_len, json_str, 1, 1, NULL);
 }
 
 
@@ -1905,7 +1912,7 @@ static struct tfdg_room *room_create(const char *room)
 
 	room_set_state(room_s, tgs_lobby);
 	strncpy(room_s->uuid, room, sizeof(room_s->uuid));
-	HASH_ADD_KEYPTR(hh, room_by_uuid, room_s->uuid, strlen(room_s->uuid), room_s);
+	HASH_ADD_KEYPTR(hh, room_by_uuid, room_s->uuid, (unsigned int)strlen(room_s->uuid), room_s);
 	return room_s;
 }
 
@@ -2059,16 +2066,16 @@ static void tfdg_handle_login(struct mosquitto_evt_acl_check *ed, const char *ro
 			player_set_dice_count(player_s, room_s->options.max_dice);
 			room_append_player(room_s, player_s, false);
 			room_set_player_count(room_s, room_s->player_count+1);
-			HASH_ADD_KEYPTR(hh_uuid, room_s->player_by_uuid, player_s->uuid,  strlen(player_s->uuid), player_s);
-			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id,  strlen(player_s->client_id), player_s);
+			HASH_ADD_KEYPTR(hh_uuid, room_s->player_by_uuid, player_s->uuid, (unsigned int)strlen(player_s->uuid), player_s);
+			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id, (unsigned int)strlen(player_s->client_id), player_s);
 		}else{
-			HASH_FIND(hh_client_id, room_s->player_by_client_id, player_s->client_id, strlen(player_s->client_id), p);
+			HASH_FIND(hh_client_id, room_s->player_by_client_id, player_s->client_id, (unsigned int)strlen(player_s->client_id), p);
 			if(p){
 				HASH_DELETE(hh_client_id, room_s->player_by_client_id, player_s);
 			}
 			free(player_s->client_id);
 			player_s->client_id = strdup(mosquitto_client_id(ed->client));
-			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id,  strlen(player_s->client_id), player_s);
+			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id, (unsigned int)strlen(player_s->client_id), player_s);
 		}
 		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
@@ -2082,7 +2089,7 @@ static void tfdg_handle_login(struct mosquitto_evt_acl_check *ed, const char *ro
 					room_s->uuid, MAX_LOG_LEN, "re-login", player_s->uuid, player_s->name);
 
 			client_id = mosquitto_client_id(ed->client);
-			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, strlen(client_id), p);
+			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, (unsigned int)strlen(client_id), p);
 			if(p){
 				HASH_DELETE(hh_client_id, room_s->player_by_client_id, p);
 			}
@@ -2090,7 +2097,7 @@ static void tfdg_handle_login(struct mosquitto_evt_acl_check *ed, const char *ro
 			free(player_s->client_id);
 			player_s->client_id = strdup(client_id);
 
-			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id,  strlen(player_s->client_id), player_s);
+			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id, (unsigned int)strlen(player_s->client_id), player_s);
 			tfdg_send_current_state(room_s, player_s);
 		}else{
 			/* Spectator */
@@ -2110,12 +2117,12 @@ static void tfdg_handle_login(struct mosquitto_evt_acl_check *ed, const char *ro
 			player_set_dice_count(player_s, 0);
 			player_set_state(player_s, tps_spectator);
 
-			HASH_FIND(hh_client_id, room_s->player_by_client_id, player_s->client_id, strlen(player_s->client_id), p);
+			HASH_FIND(hh_client_id, room_s->player_by_client_id, player_s->client_id, (unsigned int)strlen(player_s->client_id), p);
 			if(p){
 				HASH_DELETE(hh_client_id, room_s->player_by_client_id, p);
 			}
 
-			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id,  strlen(player_s->client_id), player_s);
+			HASH_ADD_KEYPTR(hh_client_id, room_s->player_by_client_id, player_s->client_id, (unsigned int)strlen(player_s->client_id), player_s);
 			tfdg_send_current_state(room_s, player_s);
 
 			printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
@@ -2231,7 +2238,7 @@ static void tfdg_handle_logout(struct mosquitto_evt_acl_check *ed, struct tfdg_r
 		return;
 	}
 
-	HASH_FIND(hh_uuid, room_s->player_by_uuid, uuid, strlen(uuid), player_s);
+	HASH_FIND(hh_uuid, room_s->player_by_uuid, uuid, (unsigned int)strlen(uuid), player_s);
 	if(player_s == NULL){
 		free(name);
 		free(uuid);
@@ -2243,7 +2250,7 @@ static void tfdg_handle_logout(struct mosquitto_evt_acl_check *ed, struct tfdg_r
 		return;
 	}
 
-	HASH_FIND(hh_client_id, room_s->player_by_client_id, player_s->client_id, strlen(player_s->client_id), p);
+	HASH_FIND(hh_client_id, room_s->player_by_client_id, player_s->client_id, (unsigned int)strlen(player_s->client_id), p);
 	if(p){
 		HASH_DELETE(hh_client_id, room_s->player_by_client_id, p);
 	}
@@ -2834,7 +2841,7 @@ static void tfdg_handle_kick_player(struct mosquitto_evt_acl_check *ed, struct t
 	}
 
 	client_id = mosquitto_client_id(ed->client);
-	HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, strlen(client_id), kicker_s);
+	HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, (unsigned int)strlen(client_id), kicker_s);
 
 	if(kicker_s && room_s->host == kicker_s &&
 			(room_s->state == tgs_lobby || room_s->state == tgs_playing_round || room_s->state == tgs_round_over || room_s->state == tgs_game_over)){
@@ -3289,7 +3296,7 @@ static int callback_acl_check(int event, void *event_data, void *userdata)
 		return MOSQ_ERR_ACL_DENIED;
 	}
 
-	HASH_FIND(hh, room_by_uuid, room, strlen(room), room_s);
+	HASH_FIND(hh, room_by_uuid, room, (unsigned int)strlen(room), room_s);
 
 	if(ed->access == MOSQ_ACL_READ){
 		free(room);
@@ -3312,7 +3319,7 @@ static int callback_acl_check(int event, void *event_data, void *userdata)
 				return MOSQ_ERR_ACL_DENIED;
 			}
 			client_id = mosquitto_client_id(ed->client);
-			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, strlen(client_id), player_s);
+			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, (unsigned int)strlen(client_id), player_s);
 
 
 			if(player_s == NULL ||
@@ -3346,7 +3353,7 @@ static int callback_acl_check(int event, void *event_data, void *userdata)
 			if(client_id == NULL){
 				return MOSQ_ERR_ACL_DENIED;
 			}
-			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, strlen(client_id), player_s);
+			HASH_FIND(hh_client_id, room_s->player_by_client_id, client_id, (unsigned int)strlen(client_id), player_s);
 			if(player_s == NULL){
 				return MOSQ_ERR_ACL_DENIED;
 			}else{
@@ -3383,9 +3390,9 @@ static int callback_acl_check(int event, void *event_data, void *userdata)
 			tfdg_handle_kick_player(ed, room_s);
 		}else if(!strcmp(cmd, "set-option")){
 			tfdg_handle_set_option(ed, room_s);
-       }else if(!strcmp(cmd, "snd-higher")){
+		}else if(!strcmp(cmd, "snd-higher")){
 			tfdg_handle_sound(ed, room_s, "higher");
-       }else if(!strcmp(cmd, "snd-exact")){
+		}else if(!strcmp(cmd, "snd-exact")){
 			tfdg_handle_sound(ed, room_s, "exact");
 		}
 		free(room);
