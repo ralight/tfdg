@@ -2026,6 +2026,32 @@ static void player_set_uuid(struct tfdg_player *player_s, char *uuid)
 }
 
 
+static void tfdg_handle_new_name(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
+{
+	char *uuid = NULL;
+	char *name = NULL;
+	struct tfdg_player *player_s = NULL, *p;
+	const char *client_id;
+
+	if(json_parse_name_uuid(ed->payload, ed->payloadlen, &name, &uuid)){
+		return;
+	}
+	free(uuid);
+
+	room_set_last_event(room_s, time(NULL));
+
+	find_player_from_json(ed->payload, ed->payloadlen, room_s, &player_s);
+	if(player_s){
+		free(player_s->name);
+		player_set_name(player_s, name);
+
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
+				room_s->uuid, MAX_LOG_LEN, "new-name", player_s->uuid, player_s->name);
+		easy_publish_player(room_s, "new-name", room_s->host);
+	}
+}
+
 static void tfdg_handle_login(struct mosquitto_evt_acl_check *ed, const char *room, struct tfdg_room *room_s)
 {
 	char *uuid = NULL;
@@ -3370,6 +3396,8 @@ static int callback_acl_check(int event, void *event_data, void *userdata)
 			tfdg_handle_logout(ed, room_s);
 		}else if(!strcmp(cmd, "start-game")){
 			tfdg_handle_start_game(ed, room_s);
+		}else if(!strcmp(cmd, "new-name")){
+			tfdg_handle_new_name(ed, room_s);
 		}else if(!strcmp(cmd, "roll-dice")){
 			tfdg_handle_roll_dice(ed, room_s);
 		}else if(!strcmp(cmd, "call-dudo")){

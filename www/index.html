@@ -199,6 +199,18 @@ function enableStartGame()
 	}
 }
 
+function newName(data){
+	let name = escapeHtml(data['name']);
+	let uuid = escapeHtml(data['uuid']);
+
+	let ishost = "";
+	if(uuid == host){
+		ishost = "<img src='img/host.svg' width='20' height='20' class='mr-1'/>";
+	}
+	$("#"+uuid+"-h").empty()
+	$("#"+uuid+"-h").append('<span>'+ishost+'</span>'+name+' ⇨');
+}
+
 function setLobby(data){
 	clearCards();
 
@@ -230,22 +242,25 @@ function addPlayerCard(data) {
 	if(uuid == host){
 		ishost = "<img src='img/host.svg' width='20' height='20' class='mr-1'/>";
 	}
-	let card = '<div class="card text-center float-left m-1" id="'+uuid+'">'+
-		'<div class="card-header" style="padding:0.5rem 1.25rem" onclick="kickPlayerConfirm(\''+name+'\',\''+uuid+'\');"><span>'+ishost+'</span>'+name+' ⇨</div>'+
-			'<div class="card-body" style="padding:0.5rem">';
-	card += '<div class="dice-row">';
+	let card = $('<div class="card text-center float-left m-1" id="'+uuid+'"></div>');
+	$("#gametable").append(card);
+	
+	let header = $('<div class="card-header" id="'+uuid+'-h" style="padding:0.5rem 1.25rem"></div>');
+	header.click(function(){kickPlayerConfirm(name, uuid)});
+	card.append(header);
+	header.append('<span>'+ishost+'</span>'+name+' ⇨');
+
+	let cardbody = '<div class="card-body" style="padding:0.5rem">';
+	cardbody += '<div class="dice-row">';
 	for(let i=1; i<options['max-dice']+1; i++){
-		card += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
+		cardbody += '<div class="dice diceU" id="'+uuid+'-d'+i+'"></div>';
 		if(i%5 == 0){
-			card += "</div>";
-			card += '<div class="dice-row">';
+			cardbody += "</div>";
+			cardbody += '<div class="dice-row">';
 		}
 	}
-	card += "</div>";
-	card += '</div></div>';
-
-
-	$("#gametable").append(card);
+	cardbody += '</div></div>';
+	card.append(cardbody);
 }
 
 function setPlayDirection(data){
@@ -264,7 +279,7 @@ function setPlayDirection(data){
 
 function resetPlayerCardDice(){
 	$("#gametable div div.card-body").each(function(index){
-		let uuid = $(this).find("div")[0].id.substr(0, 36);
+		let uuid = $(this).find("div div")[0].id.substr(0, 36);
 		$(this).empty();
 		let card = "";
 
@@ -423,7 +438,9 @@ function newRound(data){
 
 function setCookies(name, uuid){
 	document.cookie = "name=" + encodeURIComponent(name) + ";max-age=86400;path=/;SameSite=Strict;Secure";
-	document.cookie = "uuid=" + encodeURIComponent(uuid) + ";max-age=86400;path=/;SameSite=Strict;Secure";
+	if(uuid != ""){
+		document.cookie = "uuid=" + encodeURIComponent(uuid) + ";max-age=86400;path=/;SameSite=Strict;Secure";
+	}
 }
 
 function getCookies(){
@@ -943,6 +960,8 @@ function startMQTT(){
 		if(cmd == "summary-results"){
 			console.log("Received result summary");
 			summary_results = data;
+		}else if(cmd == "new-name"){
+			newName(data);
 		}else if(cmd == "loser-summary-results"){
 			console.log("Received loser result summary");
 			summary_results = data;
@@ -1015,7 +1034,7 @@ function startMQTT(){
 			setDiceStar();
 			if(data['winner']['name'].length < 10){
 				$("#banner").removeClass("d-none");
-				let name = escapeHtml(data['winner']['name']);
+				let name = escapeHtml(data['winner']['name'].replace("'", "&apos;"));
 				$("#bannertext").html(name + " is awesome!");
 				animate();
 			}
@@ -1054,9 +1073,15 @@ function startPlay(){
 }
 
 function saveName(){
-	setCookies($("#nameinput").val(), uuidv4());
 	$('#playermodal').modal('hide');
-	startPlay();
+	if(myname == "" || myuuid == ""){
+		setCookies($("#nameinput").val(), uuidv4());
+		startPlay();
+	}else{
+		setCookies($("#nameinput").val(), "");
+		getCookies();
+		easy_publish("new-name");
+	}
 }
 
 function leaveGame(){
@@ -1308,6 +1333,7 @@ $(window).on("load", function(){
 									<input type="checkbox" class="custom-control-input" id="t-sounds" checked onclick="handlePrefSound(this.checked);">
 									<label class="custom-control-label" for="t-sounds">Allow sound effects</label>
 								</div>
+								<button type="button" class="btn btn-success m-1" id="b-chname" onclick="$('#playermodal').modal();">Change name</button>
 								<!--
 								<div class="custom-control custom-switch">
 									<input type="checkbox" class="custom-control-input" id="t-dark" onclick="handlePrefDark();">
