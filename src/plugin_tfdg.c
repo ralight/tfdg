@@ -885,9 +885,16 @@ void tfdg_send_current_state(struct tfdg_room *room_s, struct tfdg_player *playe
 }
 
 
-int mosquitto_plugin_version(void)
+int mosquitto_plugin_version(int supported_version_count, const int *supported_versions)
 {
-	return 5;
+	int i;
+
+	for(i=0; i<supported_version_count; i++){
+		if(supported_versions[i] == 5){
+			return 5;
+		}
+	}
+	return -1;
 }
 
 
