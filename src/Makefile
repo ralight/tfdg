@@ -1,7 +1,7 @@
 INSTALL?=install
 prefix?=/usr/local
 STRIP?=strip
-CPPFLAGS=-Ideps
+CPPFLAGS=-Ideps -Wall -Wconversion
 
 .PHONY: all install uninstall clean
 

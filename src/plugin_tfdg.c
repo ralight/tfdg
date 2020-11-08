@@ -87,7 +87,7 @@ struct tfdg_player{
 	int dice_mask[MAX_DICE];
 	int login_count;
 	enum tfdg_player_state state;
-	char pre_roll;
+	uint8_t pre_roll;
 	bool ex_palifico;
 };
 
@@ -1713,7 +1713,7 @@ void room_set_last_event(struct tfdg_room *room_s, time_t last_event)
 	cJSON *jtmp;
 
 	jtmp = cJSON_GetObjectItemCaseSensitive(room_s->json, "last-event");
-	cJSON_SetNumberValue(jtmp, last_event);
+	cJSON_SetNumberValue(jtmp, (double)last_event);
 	room_s->last_event = last_event;
 }
 
@@ -1746,7 +1746,7 @@ void room_set_start_time(struct tfdg_room *room_s, time_t start_time)
 	cJSON *jtmp;
 
 	jtmp = cJSON_GetObjectItemCaseSensitive(room_s->json, "start-time");
-	cJSON_SetNumberValue(jtmp, start_time);
+	cJSON_SetNumberValue(jtmp, (double)start_time);
 	room_s->start_time = start_time;
 }
 
@@ -2031,8 +2031,7 @@ static void tfdg_handle_new_name(struct mosquitto_evt_acl_check *ed, struct tfdg
 {
 	char *uuid = NULL;
 	char *name = NULL;
-	struct tfdg_player *player_s = NULL, *p;
-	const char *client_id;
+	struct tfdg_player *player_s = NULL;
 
 	if(json_parse_name_uuid(ed->payload, ed->payloadlen, &name, &uuid)){
 		return;
@@ -2498,7 +2497,7 @@ static void send_dice(struct tfdg_room *room_s, struct tfdg_player *player_s)
 	cJSON_Delete(tree);
 	if(json_str){
 		snprintf(topic, sizeof(topic), "tfdg/%s/dice/%s", room_s->uuid, player_s->uuid);
-		mosquitto_broker_publish(NULL, topic, strlen(json_str), json_str, 1, 0, NULL);
+		mosquitto_broker_publish(NULL, topic, (int)strlen(json_str), json_str, 1, 0, NULL);
 		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
 			ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
 			room_s->uuid, MAX_LOG_LEN, "send-dice", player_s->uuid, player_s->name);
@@ -2538,7 +2537,7 @@ static void room_pre_roll_init(struct tfdg_room *room_s)
 	i = 0;
 	CDL_FOREACH(room_s->players, p){
 		if(p->state != tps_pre_roll_lost){
-			p->pre_roll = (bytes[i] % room_s->options.max_dice_value) + 1;
+			p->pre_roll = (uint8_t)((bytes[i] % room_s->options.max_dice_value) + 1);
 			player_set_state(p, tps_pre_roll);
 			i++;
 
@@ -2812,7 +2811,7 @@ static void room_add_to_stats(struct tfdg_room *room_s)
 			stats.max_players = room_s->player_count;
 		}
 		stats.duration_counts[room_s->player_count]++;
-		stats.durations[room_s->player_count] += time(NULL)-room_s->start_time;
+		stats.durations[room_s->player_count] += (int)(time(NULL)-room_s->start_time);
 	}
 	stats.calza_success += room_s->calza_success;
 	stats.calza_fail += room_s->calza_fail;
@@ -3077,15 +3076,8 @@ static void tfdg_handle_i_won(struct mosquitto_evt_acl_check *ed, struct tfdg_ro
 {
 	struct tfdg_player *player_s = NULL;
 
-	/* Find the player structure described by '{"uuid":""}' if it is in this room */
-	if(room_s == NULL || find_player_from_json(ed->payload, ed->payloadlen, room_s, &player_s)){
-		return;
-	}
-	/* Check that the client sending this message matches the client that is
-	 * attached to this player. */
-	if(strcmp(mosquitto_client_id(ed->client), player_s->client_id)){
-		return;
-	}
+	player_s = find_player_check_id(ed, room_s);
+
 	/* Check that the client is in the correct state. */
 	if(player_s->state != tps_calza_candidate){
 		return;
@@ -3147,7 +3139,7 @@ static void tfdg_handle_sound(const struct mosquitto_evt_acl_check *ed, struct t
 	cJSON_Delete(tree);
 
 	snprintf(topic, sizeof(topic), "tfdg/%s/snd-%s", room_s->uuid, type);
-	mosquitto_broker_publish(NULL, topic, strlen(json_str), json_str, 1, 0, NULL);
+	mosquitto_broker_publish(NULL, topic, (int)strlen(json_str), json_str, 1, 0, NULL);
 }
 
 
@@ -3166,7 +3158,7 @@ static void tfdg_handle_set_option(struct mosquitto_evt_acl_check *ed, struct tf
 		return;
 	}
 
-	tree = cJSON_ParseWithLength(ed->payload, ed->payloadlen);
+	tree = cJSON_ParseWithLength(ed->payload, (size_t)ed->payloadlen);
 	if(tree){
 		j_option = cJSON_GetObjectItemCaseSensitive(tree, "option");
 		if(j_option == NULL || cJSON_IsString(j_option) == false){
