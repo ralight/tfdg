@@ -56,6 +56,7 @@ enum tfdg_game_state{
 	tgs_game_over = 7,
 	tgs_pre_roll = 8,
 	tgs_pre_roll_over = 9,
+	tgs_resetting = 10,
 };
 
 enum tfdg_player_state{
@@ -2890,6 +2891,26 @@ static void tfdg_handle_kick_player(struct mosquitto_evt_acl_check *ed, struct t
 }
 
 
+static void tfdg_handle_reset_game(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
+{
+	struct tfdg_player *player_s = NULL;
+
+	player_s = find_player_check_id(ed, room_s);
+	if(player_s && room_s->host == player_s){
+
+		printf(ANSI_YELLOW GAME_NAME ANSI_BLUE "%s" ANSI_RESET " : " ANSI_GREEN "%-*s" ANSI_RESET " : "
+				ANSI_MAGENTA "%s" ANSI_RESET " : " ANSI_CYAN "%s" ANSI_RESET "\n",
+				room_s->uuid, MAX_LOG_LEN, "reset-game", player_s->uuid, player_s->name);
+
+		easy_publish(room_s, "reset-game", NULL);
+
+		room_set_state(room_s, tgs_resetting);
+		easy_publish(room_s, "room-closing", NULL);
+		cleanup_room(room_s, "reset-game");
+	}
+}
+
+
 static void tfdg_handle_leave_game(struct mosquitto_evt_acl_check *ed, struct tfdg_room *room_s)
 {
 	struct tfdg_player *player_s = NULL;
@@ -3369,6 +3390,8 @@ static int callback_acl_check(int event, void *event_data, void *userdata)
 			free(cmd);
 			free(player);
 			return MOSQ_ERR_ACL_DENIED;
+		}else if(strcmp(cmd, "reset-game") == 0){
+			return MOSQ_ERR_SUCCESS;
 		}else{
 			free(cmd);
 			free(player);
@@ -3416,6 +3439,8 @@ static int callback_acl_check(int event, void *event_data, void *userdata)
 			tfdg_handle_leave_game(ed, room_s);
 		}else if(!strcmp(cmd, "kick-player")){
 			tfdg_handle_kick_player(ed, room_s);
+		}else if(!strcmp(cmd, "reset-game")){
+			tfdg_handle_reset_game(ed, room_s);
 		}else if(!strcmp(cmd, "set-option")){
 			tfdg_handle_set_option(ed, room_s);
 		}else if(!strcmp(cmd, "snd-higher")){

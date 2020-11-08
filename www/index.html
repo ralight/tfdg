@@ -852,8 +852,16 @@ function handleHost(data){
 	host = data["uuid"];
 	if(host == myuuid){
 		$("#t-o-form").prop("disabled", game_playing);
+
+		$("#b-reset").addClass("btn-danger");
+		$("#b-reset").removeClass("btn-outline-danger");
+		$("#b-reset").prop("disabled", false);
 	}else{
 		$("#t-o-form").prop("disabled", true);
+
+		$("#b-reset").addClass("btn-outline-danger");
+		$("#b-reset").removeClass("btn-secondary");
+		$("#b-reset").prop("disabled", true);
 	}
 	if(game_playing == false){
 		if(host == myuuid){
@@ -1058,6 +1066,8 @@ function startMQTT(){
 			handleSoundHigher(data);
 		}else if(cmd == "snd-exact"){
 			handleSoundExact(data);
+		}else if(cmd == "reset-game"){
+			location.reload();
 		}
 	}
 }
@@ -1087,6 +1097,12 @@ function saveName(){
 function leaveGame(){
 	$('#leavemodal').modal('hide');
 	easy_publish("leave-game");
+}
+
+function resetGame(){
+	if(host != myuuid) return;
+	$('#resetmodal').modal('hide');
+	easy_publish("reset-game");
 }
 
 function handlePrefSound(val){
@@ -1302,6 +1318,25 @@ $(window).on("load", function(){
 				</div>
 			</div>
 		</div>
+		<div class="modal fade" id="resetmodal" tabindex="-1" role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Reset the game</h5>
+					</div>
+					<div class="modal-body">
+						<p>This will reset the game for everbody. Use this if
+						you started the game before all players arrived, or in
+						case of any other problems that mean the game cannot
+						continue.</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal">Carry on playing</button>
+						<button type="button" class="btn btn-danger" onclick="resetGame();">Reset</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div class="container d-none" id="game">
 			<div class="row">
 				<div class="col-1 ml-3 mt-1" style="padding: 0"></div>
@@ -1326,7 +1361,8 @@ $(window).on("load", function(){
 						<hr style="margin-top:0.25rem; margin-bottom:0.25rem"/>
 						<div class="row justify-content-center">
 							<div class="col-sm-auto text-center">
-								<button type="button" class="btn btn-danger m-1" id="b-leave" onclick="$('#leavemodal').modal();">Leave game</button>
+								<button type="button" class="btn btn-primary m-1" id="b-leave" onclick="$('#leavemodal').modal();">Leave game</button>
+								<button type="button" disabled class="btn btn-danger m-1" id="b-reset" onclick="$('#resetmodal').modal();">Reset game</button>
 								<h2 class="m-1">User preferences</h2>
 								<p class="text-left">Changing these values will set cookies. <a href="privacy.html" target="_blank">Privacy</a>.</p>
 								<div class="custom-control custom-switch text-left">
